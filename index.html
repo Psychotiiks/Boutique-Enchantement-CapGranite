@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boutique d'Enchantement - Skyrim RP</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             background: radial-gradient(circle at center, rgba(17, 23, 38, 0.85) 0%, rgba(8, 10, 16, 0.95) 70%, #030406 100%),
                         url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80') no-repeat center top fixed;
@@ -60,9 +58,7 @@
             gap: 8px;
             transition: background 0.2s;
         }
-        .btn-discord:hover {
-            background: #4752C4;
-        }
+        .btn-discord:hover { background: #4752C4; }
 
         /* Logo & Header */
         .header-logo {
@@ -185,6 +181,15 @@
             border-color: #ef4444;
             color: #fff;
         }
+        .btn-warning {
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fcd34d;
+        }
+        .btn-warning:hover {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            color: #fff;
+        }
 
         /* Table */
         table {
@@ -210,6 +215,11 @@
             height: 24px;
             border-radius: 50%;
             object-fit: cover;
+        }
+        .btn-group {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
         }
     </style>
 </head>
@@ -281,14 +291,15 @@
         </table>
     </div>
 
-    <div class="card">
-        <h2>Membres Connectés & Ventes</h2>
+    <!-- Carte visible UNIQUEMENT par l'administrateur -->
+    <div class="card" id="232537879207739394" style="display: none;">
+        <h2>Membres Connectés & Ventes (Admin)</h2>
         <table>
             <thead>
                 <tr>
                     <th>Utilisateur Discord</th>
                     <th class="right">Total Vendu</th>
-                    <th class="right">Action</th>
+                    <th class="right">Actions</th>
                 </tr>
             </thead>
             <tbody id="users-list"></tbody>
@@ -318,6 +329,9 @@
 
     <script>
         const DISCORD_CLIENT_ID = '1548137913416679495';
+        
+        // --- INSÉRER VOTRE ID DISCORD ICI ---
+        const ADMIN_DISCORD_ID = 'VOTRE_ID_DISCORD_ADMIN_ICI';
 
         const defaultData = {
             gold: 1250,
@@ -343,7 +357,7 @@
         let currentUser = null;
 
         function escapeHTML(str) {
-            return String(str)
+            return String(str || '')
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
@@ -352,7 +366,7 @@
         }
 
         function loginWithDiscord() {
-            if (!DISCORD_CLIENT_ID || DISCORD_CLIENT_ID === 'VOTRE_CLIENT_ID_ICI') {
+            if (!DISCORD_CLIENT_ID) {
                 alert("Erreur : Le CLIENT_ID Discord n'est pas renseigné.");
                 return;
             }
@@ -466,14 +480,26 @@
             }
         }
 
-        function removeUser(userId) {
-            if (confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) {
-                delete data.users[userId];
-                if (currentUser && currentUser.id === userId) {
-                    logout();
-                } else {
+        function resetUserSales(userId) {
+            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) {
+                alert("Action non autorisée.");
+                return;
+            }
+
+            if (data.users[userId]) {
+                if (confirm(`Remettre à 0 septims les ventes de ${data.users[userId].username} ?`)) {
+                    data.users[userId].totalSales = 0;
                     saveAndRender();
                 }
+            }
+        }
+
+        function removeUser(userId) {
+            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            
+            if (confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) {
+                delete data.users[userId];
+                saveAndRender();
             }
         }
 
@@ -490,28 +516,33 @@
                 const totalValue = info.qty * info.price;
                 totalStockValue += totalValue;
 
-                list.innerHTML += `
-                    <tr>
-                        <td>${escapeHTML(name)}</td>
-                        <td class="right">${info.price} septims</td>
-                        <td class="right">${info.qty}</td>
-                        <td class="right">${totalValue.toLocaleString()} septims</td>
-                    </tr>
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHTML(name)}</td>
+                    <td class="right">${info.price} septims</td>
+                    <td class="right">${info.qty}</td>
+                    <td class="right">${totalValue.toLocaleString()} septims</td>
                 `;
+                list.appendChild(tr);
             }
             document.getElementById('stock-value').innerText = totalStockValue.toLocaleString();
 
-            // Utilisateurs Discord
-            const usersList = document.getElementById('users-list');
-            usersList.innerHTML = '';
+            // Gestion de l'affichage du bloc Admin
+            const adminCard = document.getElementById('admin-users-card');
+            const isAdmin = currentUser && currentUser.id === ADMIN_DISCORD_ID;
 
-            Object.values(data.users).forEach(u => {
-                const avatarUrl = u.avatar 
-                    ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` 
-                    : 'https://cdn.discordapp.com/embed/avatars/0.png';
-                
-                usersList.innerHTML += `
-                    <tr>
+            if (isAdmin) {
+                adminCard.style.display = 'block';
+                const usersList = document.getElementById('users-list');
+                usersList.innerHTML = '';
+
+                Object.values(data.users).forEach(u => {
+                    const avatarUrl = u.avatar 
+                        ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` 
+                        : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
                         <td>
                             <div class="user-cell">
                                 <img class="mini-avatar" src="${escapeHTML(avatarUrl)}" alt="">
@@ -520,11 +551,17 @@
                         </td>
                         <td class="right">${u.totalSales.toLocaleString()} septims</td>
                         <td class="right">
-                            <button class="btn btn-danger" onclick="removeUser('${escapeHTML(u.id)}')">Supprimer</button>
+                            <div class="btn-group">
+                                <button class="btn btn-warning" onclick="resetUserSales('${escapeHTML(u.id)}')">Remettre à 0</button>
+                                <button class="btn btn-danger" onclick="removeUser('${escapeHTML(u.id)}')">Supprimer</button>
+                            </div>
                         </td>
-                    </tr>
-                `;
-            });
+                    `;
+                    usersList.appendChild(tr);
+                });
+            } else {
+                adminCard.style.display = 'none';
+            }
 
             // Employés RP
             const empList = document.getElementById('employee-list');
@@ -532,17 +569,17 @@
             if (!data.employees) data.employees = [];
 
             data.employees.forEach(emp => {
-                empList.innerHTML += `
-                    <tr>
-                        <td><strong>${escapeHTML(emp.name)}</strong></td>
-                        <td>${escapeHTML(emp.role)}</td>
-                        <td class="right">${emp.salary} septims</td>
-                        <td class="right">
-                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
-                            <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
-                        </td>
-                    </tr>
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${escapeHTML(emp.name)}</strong></td>
+                    <td>${escapeHTML(emp.role)}</td>
+                    <td class="right">${emp.salary} septims</td>
+                    <td class="right">
+                        <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
+                        <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
+                    </td>
                 `;
+                empList.appendChild(tr);
             });
         }
 
