@@ -414,8 +414,9 @@
         </div>
     </div>
 
+    <!-- Liste des employés (visible par tous, actions restreintes) -->
     <div class="card">
-        <h2>Gestion des Employés RP</h2>
+        <h2>Registre des Employés RP</h2>
         <div class="action-inputs" id="admin-employee-inputs" style="display: none; flex-direction: column; align-items: center;">
             <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
                 <input type="text" id="emp-name" placeholder="Nom du personnage RP">
@@ -435,7 +436,7 @@
                     <th>Employé / Joueur</th>
                     <th>Rôle</th>
                     <th class="right">Salaire</th>
-                    <th class="right">Actions</th>
+                    <th class="right" id="th-actions-header" style="display: none;">Actions</th>
                 </tr>
             </thead>
             <tbody id="employee-list"></tbody>
@@ -704,13 +705,14 @@
 
             const adminCard = document.getElementById('admin-users-card');
             const adminEmpInputs = document.getElementById('admin-employee-inputs');
+            const thActionsHeader = document.getElementById('th-actions-header');
             const userIsAdmin = isAdmin();
 
             if (userIsAdmin) {
                 adminCard.style.display = 'block';
                 adminEmpInputs.style.display = 'flex';
+                thActionsHeader.style.display = 'table-cell';
                 
-                // Mettre à jour la liste déroulante Discord pour les employés
                 const empDiscordSelect = document.getElementById('emp-discord-select');
                 if (empDiscordSelect) {
                     const currentVal = empDiscordSelect.value;
@@ -750,6 +752,7 @@
             } else {
                 adminCard.style.display = 'none';
                 adminEmpInputs.style.display = 'none';
+                thActionsHeader.style.display = 'none';
             }
 
             const empList = document.getElementById('employee-list');
@@ -768,10 +771,15 @@
                         </div>`;
                 }
 
-                let adminActions = userIsAdmin ? `
-                    <button class="btn btn-warning" onclick="editEmployee(${emp.id})">Modifier</button>
-                    <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
-                ` : '';
+                let adminActionsCell = '';
+                if (userIsAdmin) {
+                    adminActionsCell = `
+                        <td class="right">
+                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary}, '${emp.name}')">Payer</button>
+                            <button class="btn btn-warning" onclick="editEmployee(${emp.id})">Modifier</button>
+                            <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
+                        </td>`;
+                }
 
                 empList.innerHTML += `
                     <tr>
@@ -781,10 +789,7 @@
                         </td>
                         <td>${escapeHTML(emp.role)}</td>
                         <td class="right">${emp.salary} septims</td>
-                        <td class="right">
-                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary}, '${emp.name}')">Payer</button>
-                            ${adminActions}
-                        </td>
+                        ${adminActionsCell}
                     </tr>`;
             });
         }
@@ -856,6 +861,7 @@
         }
 
         function payEmployee(id, salary, empName) {
+            if (!isAdmin()) return;
             if (data.gold >= salary) {
                 data.gold -= salary;
                 saveData(`A payé le salaire de ${empName} (${salary} septims)`);
