@@ -3,230 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boutique d'Enchantement - Skyrim RP</title>
+    <title>Compagnie Minière - Skyrim RP</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
         body {
-            background: radial-gradient(circle at center, #111726 0%, #080a10 70%, #030406 100%),
-                        url('watermarked_img_15139461399379977025.png') no-repeat center top fixed;
-            background-size: cover;
-            color: #d1d5db;
-            font-family: 'Cinzel', 'Georgia', 'Segoe UI', serif;
+            background-color: #1a1e29;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
         }
-
-        /* Top Bar & Auth */
-        .auth-bar {
+        nav {
+            display: flex;
+            gap: 20px;
+            background: #252a38;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        nav button {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        nav button:hover { color: #fff; }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
             width: 100%;
-            max-width: 750px;
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 10px;
+            max-width: 600px;
+            margin-bottom: 20px;
+            text-align: center;
         }
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1px solid rgba(135, 206, 235, 0.3);
+        .balance-box {
+            font-size: 1.2em;
+            margin-bottom: 15px;
         }
-        .user-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 1px solid #87ceeb;
-        }
-        .btn-discord {
-            background: #5865F2;
-            color: #fff;
+        .btn {
+            background: #e0e0e0;
+            color: #1a1e29;
             border: none;
             padding: 8px 16px;
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s;
+            margin: 5px;
         }
-        .btn-discord:hover {
-            background: #4752C4;
-        }
-
-        /* Logo & Header */
-        .header-logo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        .btn-danger {
-            border-color: rgba(239, 68, 68, 0.4);
-            color: #fca5a5;
-        }
-        .btn-danger:hover {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: #ef4444;
-            color: #fff;
-        }
-
-        /* Table */
+        .btn:hover { background: #ffffff; }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         th, td {
             padding: 10px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        th { color: #94a3b8; font-size: 0.9em; text-transform: uppercase; }
-        td.right, th.right { text-align: right; }
-        tr:hover td { background: rgba(255, 255, 255, 0.03); }
+        th { color: #aaa; }
+        td:last-child { text-align: right; }
+        .action-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        input, select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #252a38;
+            color: white;
+        }
     </style>
 </head>
 <body>
 
-    <div class="auth-bar">
-        <div id="auth-container">
-            <a id="discord-login-btn" href="#" class="btn-discord">
-                <span>Se connecter avec Discord</span>
-            </a>
-        </div>
+    <nav>
+        <button>Tarifs</button>
+        <button>Stocks</button>
+        <button>Devis</button>
+        <button>Commander</button>
+    </nav>
+
+    <div class="balance-box">
+        Dû par la Compagnie Minière : <strong id="gold-balance">0</strong> septims
     </div>
 
-        <h2>Gestion des Employés</h2>
+    <div class="card">
+        <h2>Pioches</h2>
+        <p>Stock de la compagnie : <strong id="pickaxe-stock">58</strong></p>
+        <button class="btn" onclick="changeStock('pickaxe', -1)">⬇ Prendre</button>
+        <button class="btn" onclick="changeStock('pickaxe', 1)">⬆ Déposer</button>
+    </div>
+
+    <div class="card">
+        <h2>Mon tonneau (Minerais)</h2>
         <div class="action-inputs">
-            <input type="text" id="emp-name" placeholder="Nom du registre / RP">
-            <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
-            <input type="number" id="emp-salary" placeholder="Salaire (septims)" min="0">
-            <button class="btn" onclick="addEmployee()">+ Recruter</button>
+            <select id="resource-select">
+                <option value="Fer">Fer</option>
+                <option value="Corindon">Corindon</option>
+                <option value="Argent">Argent</option>
+                <option value="Or">Or</option>
+                <option value="Orichalque">Orichalque</option>
+                <option value="Pierre de Lune">Pierre de Lune</option>
+                <option value="Vif-Argent">Vif-Argent</option>
+            </select>
+            <input type="number" id="resource-qty" value="10" min="1">
+            <button class="btn" onclick="modifyResource(1)">Déposer</button>
+            <button class="btn" onclick="modifyResource(-1)">Retirer</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>Employé</th>
-                    <th>Rôle</th>
-                    <th class="right">Salaire</th>
-                    <th class="right">Actions</th>
+                    <th>Minerai</th>
+                    <th style="text-align: right;">Quantité</th>
                 </tr>
             </thead>
-            <tbody id="employee-list"></tbody>
+            <tbody id="inventory-list"></tbody>
         </table>
     </div>
 
     <script>
-        // CONFIGURATION DISCORD (Remplace CLIENT_ID par ton ID d'application Discord)
-        const DISCORD_CLIENT_ID = 'TON_CLIENT_ID_ICI'; 
-        const REDIRECT_URI = window.location.href.split('#')[0];
-        const DISCORD_AUTH_URL = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
+        let data = JSON.parse(localStorage.getItem('skyrim_mine_data')) || {
+            gold: 515.10,
+            pickaxes: 58,
+            items: {
+                "Fer": 514,
+                "Corindon": 237,
+                "Argent": 221,
+                "Or": 573,
+                "Orichalque": 19,
+                "Pierre de Lune": 13,
+                "Vif-Argent": 11
+            }
+        };
 
-        document.getElementById('discord-login-btn').href = DISCORD_AUTH_URL;
-
-        // Gestion de la sauvegarde locale
-        let data = JSON.parse(localStorage.getItem('skyrim_enchant_data_simple')) || {
-            gold: 1250,
-            gems: {
-                "Gemme Spirituelle (Vide)": { qty: 10, price: 7 },
-                "Gemme Spirituelle (Pleine)": { qty: 5, price: 15 }
         function saveAndRender() {
-            localStorage.setItem('skyrim_enchant_data_simple', JSON.stringify(data));
-            document.getElementById('gold-balance').innerText = data.gold.toLocaleString();
+            localStorage.setItem('skyrim_mine_data', JSON.stringify(data));
+            document.getElementById('gold-balance').innerText = data.gold.toFixed(2);
+            document.getElementById('pickaxe-stock').innerText = data.pickaxes;
 
-            // Rendu Inventaire
             const list = document.getElementById('inventory-list');
             list.innerHTML = '';
-            let totalStockValue = 0;
-
-            for (const [name, info] of Object.entries(data.gems)) {
-                const totalValue = info.qty * info.price;
-                totalStockValue += totalValue;
-
-                list.innerHTML += `
-                    <tr>
-                        <td>${name}</td>
-                        <td class="right">${info.price} septims</td>
-                        <td class="right">${info.qty}</td>
-                        <td class="right">${totalValue.toLocaleString()} septims</td>
-                    </tr>
-                `;
+            for (const [name, qty] of Object.entries(data.items)) {
+                list.innerHTML += `<tr><td>${name}</td><td>${qty}</td></tr>`;
             }
-            document.getElementById('stock-value').innerText = totalStockValue.toLocaleString();
-
-            // Rendu Employés
-            const empList = document.getElementById('employee-list');
-            empList.innerHTML = '';
-            if (!data.employees) data.employees = [];
-
-            data.employees.forEach(emp => {
-                empList.innerHTML += `
-                    <tr>
-                        <td><strong>${emp.name}</strong></td>
-                        <td>${emp.role}</td>
-                        <td class="right">${emp.salary} septims</td>
-                        <td class="right">
-                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
-                            <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
-                        </td>
-                    </tr>
-                `;
-            });
         }
 
-        function modifyGold(direction) {
-            const qty = parseInt(document.getElementById('gold-qty').value) || 0;
-            data.gold = Math.max(0, data.gold + (qty * direction));
+        function changeStock(type, amount) {
+            if (type === 'pickaxe') {
+                data.pickaxes = Math.max(0, data.pickaxes + amount);
+            }
             saveAndRender();
         }
 
-        function modifyGem(direction) {
-            const name = document.getElementById('gem-select').value;
-            const qty = parseInt(document.getElementById('gem-qty').value) || 0;
-            if (data.gems[name] !== undefined) {
-                data.gems[name].qty = Math.max(0, data.gems[name].qty + (qty * direction));
+        function modifyResource(direction) {
+            const name = document.getElementById('resource-select').value;
+            const qty = parseInt(document.getElementById('resource-qty').value) || 0;
+            if (data.items[name] !== undefined) {
+                data.items[name] = Math.max(0, data.items[name] + (qty * direction));
                 saveAndRender();
             }
         }
 
-        function addEmployee() {
-            const name = document.getElementById('emp-name').value.trim();
-            const role = document.getElementById('emp-role').value.trim() || 'Employé';
-            const salary = parseInt(document.getElementById('emp-salary').value) || 0;
-
-            if (name) {
-                data.employees.push({ id: Date.now(), name, role, salary });
-                document.getElementById('emp-name').value = '';
-                document.getElementById('emp-role').value = '';
-                document.getElementById('emp-salary').value = '';
-                saveAndRender();
-            }
-        }
-
-        function removeEmployee(id) {
-            data.employees = data.employees.filter(emp => emp.id !== id);
-            saveAndRender();
-        }
-
-        function payEmployee(id, salary) {
-            if (data.gold >= salary) {
-                data.gold -= salary;
-                saveAndRender();
-            } else {
-                alert("Pas assez d'or en caisse pour verser le salaire !");
-            }
-        }
-
-        handleDiscordAuth();
         saveAndRender();
     </script>
 </body>
