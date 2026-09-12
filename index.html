@@ -302,7 +302,8 @@
 
     <div class="card">
         <h2>Gestion des Employés RP</h2>
-        <div class="action-inputs">
+        <!-- Formulaire de recrutement visible uniquement pour l'admin -->
+        <div class="action-inputs" id="admin-employee-inputs" style="display: none;">
             <input type="text" id="emp-name" placeholder="Nom du registre / RP">
             <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
             <input type="number" id="emp-salary" placeholder="Salaire (septims)" min="0">
@@ -323,7 +324,7 @@
 
     <script>
         const DISCORD_CLIENT_ID = '1548137913416679495';
-        const ADMIN_DISCORD_ID = '232537879207739394'; // Ton ID Discord configuré ici
+        const ADMIN_DISCORD_ID = '232537879207739394';
 
         const defaultData = {
             gold: 1250,
@@ -519,10 +520,12 @@
             document.getElementById('stock-value').innerText = totalStockValue.toLocaleString();
 
             const adminCard = document.getElementById('admin-users-card');
+            const adminEmpInputs = document.getElementById('admin-employee-inputs');
             const isAdmin = currentUser && currentUser.id === ADMIN_DISCORD_ID;
 
             if (isAdmin) {
                 adminCard.style.display = 'block';
+                adminEmpInputs.style.display = 'flex';
                 const usersList = document.getElementById('users-list');
                 usersList.innerHTML = '';
 
@@ -551,6 +554,7 @@
                 });
             } else {
                 adminCard.style.display = 'none';
+                adminEmpInputs.style.display = 'none';
             }
 
             const empList = document.getElementById('employee-list');
@@ -559,13 +563,23 @@
 
             data.employees.forEach(emp => {
                 const tr = document.createElement('tr');
+                
+                // Bouton de modification de la paye uniquement pour l'admin
+                let adminActions = '';
+                if (isAdmin) {
+                    adminActions = `
+                        <button class="btn btn-warning" onclick="editEmployeeSalary(${emp.id})">Modifier Paye</button>
+                        <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
+                    `;
+                }
+
                 tr.innerHTML = `
                     <td><strong>${escapeHTML(emp.name)}</strong></td>
                     <td>${escapeHTML(emp.role)}</td>
                     <td class="right">${emp.salary} septims</td>
                     <td class="right">
                         <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
-                        <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
+                        ${adminActions}
                     </td>
                 `;
                 empList.appendChild(tr);
@@ -588,6 +602,8 @@
         }
 
         function addEmployee() {
+            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+
             const name = document.getElementById('emp-name').value.trim();
             const role = document.getElementById('emp-role').value.trim() || 'Employé';
             const salary = Math.max(0, parseInt(document.getElementById('emp-salary').value) || 0);
@@ -602,8 +618,27 @@
         }
 
         function removeEmployee(id) {
+            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
             data.employees = data.employees.filter(emp => emp.id !== id);
             saveAndRender();
+        }
+
+        function editEmployeeSalary(id) {
+            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+
+            const emp = data.employees.find(e => e.id === id);
+            if (!emp) return;
+
+            const newSalary = prompt(`Modifier le salaire de ${emp.name} (en septims) :`, emp.salary);
+            if (newSalary !== null) {
+                const parsed = parseInt(newSalary);
+                if (!isNaN(parsed) && parsed >= 0) {
+                    emp.salary = parsed;
+                    saveAndRender();
+                } else {
+                    alert("Valeur invalide.");
+                }
+            }
         }
 
         function payEmployee(id, salary) {
