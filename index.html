@@ -20,6 +20,33 @@
             min-height: 100vh;
         }
 
+        /* Écran de verrouillage si non connecté */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 4, 6, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            text-align: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(135, 206, 235, 0.3);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            max-width: 400px;
+            width: 100%;
+        }
+
         .auth-bar {
             width: 100%;
             max-width: 750px;
@@ -47,14 +74,15 @@
             background: #5865F2;
             color: #fff;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-size: 1rem;
             transition: background 0.2s;
         }
         .btn-discord:hover { background: #4752C4; }
@@ -268,12 +296,22 @@
 </head>
 <body>
 
-    <div class="auth-bar">
-        <div id="auth-container">
-            <button onclick="loginWithDiscord()" class="btn-discord">
+    <!-- Écran de connexion bloquant si non identifié -->
+    <div id="login-overlay" style="display: none;">
+        <div class="login-card">
+            <div class="logo-circle" style="margin: 0 auto 15px auto;">
+                <span class="logo-symbol">ᛋ</span>
+            </div>
+            <h1 style="font-size: 1.4rem; margin-bottom: 10px;">Boutique d'Enchantement</h1>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Veuillez vous identifier avec votre compte Discord pour accéder au registre de la boutique.</p>
+            <button onclick="loginWithDiscord()" class="btn-discord" style="width: 100%; justify-content: center;">
                 <span>Se connecter avec Discord</span>
             </button>
         </div>
+    </div>
+
+    <div class="auth-bar">
+        <div id="auth-container"></div>
     </div>
 
     <div class="header-logo">
@@ -293,7 +331,7 @@
         </div>
     </div>
 
-    <div class="card" id="user-sales-card" style="display: none;">
+    <div class="card" id="user-sales-card">
         <h2>Enregistrer une Vente</h2>
         <div class="action-inputs">
             <select id="item-category">
@@ -584,22 +622,33 @@
                         localStorage.setItem('discord_user', JSON.stringify(user));
                         window.history.replaceState({}, document.title, window.location.pathname);
                         registerUser(user);
+                    } else {
+                        showLoginOverlay();
                     }
                 })
-                .catch(err => renderAuth(null));
+                .catch(err => showLoginOverlay());
             } else {
                 try {
                     const savedUser = JSON.parse(localStorage.getItem('discord_user'));
-                    if (savedUser) registerUser(savedUser);
-                    else renderAuth(null);
+                    if (savedUser && savedUser.id) {
+                        registerUser(savedUser);
+                    } else {
+                        showLoginOverlay();
+                    }
                 } catch (e) {
-                    renderAuth(null);
+                    showLoginOverlay();
                 }
             }
         }
 
+        function showLoginOverlay() {
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
+
         function registerUser(user) {
             currentUser = user;
+            document.getElementById('login-overlay').style.display = 'none';
+
             if (!data.users) data.users = {};
             if (!data.users[user.id]) {
                 data.users[user.id] = { id: user.id, username: user.username, avatar: user.avatar, totalSales: 0 };
@@ -608,15 +657,13 @@
                 data.users[user.id].username = user.username;
                 data.users[user.id].avatar = user.avatar;
                 renderAuth(user);
-                render();
+                loadData();
             }
         }
 
         function renderAuth(user) {
             const container = document.getElementById('auth-container');
-            const salesCard = document.getElementById('user-sales-card');
-
-            if (user && currentUser) {
+            if (user) {
                 const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
                 container.innerHTML = `
                     <div class="user-profile">
@@ -625,18 +672,15 @@
                         <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8em;" onclick="logout()">Déconnexion</button>
                     </div>
                 `;
-                salesCard.style.display = 'block';
             } else {
-                container.innerHTML = `<button onclick="loginWithDiscord()" class="btn-discord"><span>Se connecter avec Discord</span></button>`;
-                salesCard.style.display = 'none';
+                container.innerHTML = '';
             }
         }
 
         function logout() {
             localStorage.removeItem('discord_user');
             currentUser = null;
-            renderAuth(null);
-            render();
+            showLoginOverlay();
         }
 
         function submitSale() {
@@ -646,7 +690,6 @@
             const amount = Math.max(0, parseInt(document.getElementById('sale-amount').value) || 0);
 
             if (amount > 0) {
-                // 95% pour la boutique, 5% de commission pour le vendeur
                 const shopPart = Math.round(amount * 0.95);
                 const commission = amount - shopPart;
 
@@ -657,7 +700,6 @@
                 }
                 data.users[currentUser.id].totalSales += amount;
 
-                // Chercher si l'utilisateur est lié à un employé pour ajouter la commission directement à son salaire
                 if (data.employees) {
                     const emp = data.employees.find(e => e.discordId === currentUser.id);
                     if (emp) {
@@ -901,16 +943,14 @@
             if (!isAdmin()) return;
             if (data.gold >= salary) {
                 data.gold -= salary;
-                // Optionnel : tu peux remettre son salaire à 0 ou le laisser s'accumuler. Ici on retire l'or de la caisse.
                 saveData(`A payé le salaire de ${empName} (${salary} septims)`);
             } else {
                 alert("Pas assez d'or en caisse !");
             }
         }
 
-        // Démarrage de l'app
+        // Lancement au démarrage de la page
         handleDiscordAuth();
-        loadData();
     </script>
 </body>
 </html>
