@@ -336,7 +336,7 @@
                 alert("Erreur : Le CLIENT_ID Discord n'est pas renseigné dans le code JavaScript.");
                 return;
             }
-            const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+            const redirectUri = encodeURIComponent('https://discord.com/oauth2/authorize?client_id=1548137913416679495&response_type=code&redirect_uri=https%3A%2F%2Fpsychotiiks.github.io%2FBoutique-alchimie-CapGranite%2F&scope=identify');
             const discordUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify`;
             window.location.href = discordUrl;
         }
