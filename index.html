@@ -243,7 +243,6 @@
             margin-bottom: 15px;
         }
 
-        /* Notifications Toast */
         #toast-container {
             position: fixed;
             bottom: 20px;
@@ -348,7 +347,6 @@
         </table>
     </div>
 
-    <!-- Panel Administrateur -->
     <div class="card" id="admin-users-card" style="display: none;">
         <h2>Panel Administrateur</h2>
 
@@ -414,7 +412,6 @@
         </div>
     </div>
 
-    <!-- Liste des employés (visible par tous, actions restreintes) -->
     <div class="card">
         <h2>Registre des Employés RP</h2>
         <div class="action-inputs" id="admin-employee-inputs" style="display: none; flex-direction: column; align-items: center;">
@@ -468,8 +465,7 @@
 
         let data = defaultData;
         let currentUser = null;
-        let lastChecksum = "";
-        let isSaving = false; // Bloque la synchro auto pendant une sauvegarde pour éviter les conflits
+        let isSaving = false;
 
         function isAdmin() {
             return currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id);
@@ -494,7 +490,7 @@
         }
 
         async function loadData() {
-            if (isSaving) return; // Ne pas recharger pendant qu'on sauvegarde
+            if (isSaving) return;
             const statusEl = document.getElementById('sync-status');
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
@@ -502,27 +498,28 @@
                 });
                 if (!response.ok) throw new Error('Erreur réseau Cloud');
                 const result = await response.json();
-                const newData = result.record;
                 
-                if (newData && newData.gold !== undefined) {
-                    if (!newData.salesHistory) newData.salesHistory = [];
-                    if (!newData.auditLogs) newData.auditLogs = [];
-                    if (!newData.employees) newData.employees = [];
-                    if (!newData.gems) newData.gems = defaultData.gems;
+                // JSONBin encapsule les données dans .record
+                const cloudData = result.record;
 
-                    const newChecksum = JSON.stringify(newData);
-                    if (lastChecksum && lastChecksum !== newChecksum) {
-                        showToast("⚡ Mise à jour détectée en direct !");
-                    }
-                    lastChecksum = newChecksum;
-                    data = newData;
-
-                    statusEl.innerText = "Synchronisé en direct avec le Cloud ✨";
+                if (cloudData && typeof cloudData === 'object' && cloudData.gold !== undefined) {
+                    data = {
+                        gold: cloudData.gold ?? defaultData.gold,
+                        gems: cloudData.gems || defaultData.gems,
+                        employees: cloudData.employees || defaultData.employees,
+                        users: cloudData.users || defaultData.users,
+                        salesHistory: cloudData.salesHistory || [],
+                        auditLogs: cloudData.auditLogs || []
+                    };
+                    statusEl.innerText = "Synchronisé avec le Cloud ✨";
                     statusEl.style.color = "#4ade80";
+                } else {
+                    // Si le bin est vide, on initialise la structure sur le cloud
+                    await saveData("Initialisation de la base de données");
                 }
             } catch (e) {
                 console.error("Erreur de chargement Cloud :", e);
-                statusEl.innerText = "Mode local / Erreur Cloud";
+                statusEl.innerText = "Erreur de synchronisation Cloud";
                 statusEl.style.color = "#ef4444";
             }
             render();
@@ -531,6 +528,7 @@
         async function saveData(auditMessage = null) {
             isSaving = true;
             if (currentUser && auditMessage) {
+                if (!data.auditLogs) data.auditLogs = [];
                 data.auditLogs.unshift({
                     author: currentUser.username,
                     action: auditMessage,
@@ -539,11 +537,10 @@
                 if (data.auditLogs.length > 50) data.auditLogs.pop();
             }
 
-            lastChecksum = JSON.stringify(data);
             render();
 
             try {
-                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -551,6 +548,7 @@
                     },
                     body: JSON.stringify(data)
                 });
+                if (!response.ok) throw new Error('Erreur écriture cloud');
             } catch (e) {
                 console.error("Erreur lors de la sauvegarde cloud :", e);
                 showToast("❌ Erreur de sauvegarde Cloud !");
@@ -892,7 +890,7 @@
         handleDiscordAuth();
         loadData();
 
-        // Actualisation automatique toutes les 5 secondes (bloquée pendant les sauvegardes)
+        // Actualisation automatique toutes les 5 secondes
         setInterval(loadData, 5000);
     </script>
 </body>
