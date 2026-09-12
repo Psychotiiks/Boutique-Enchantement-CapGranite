@@ -22,116 +22,61 @@
             min-height: 100vh;
         }
 
+        /* Top Bar & Auth */
+        .auth-bar {
+            width: 100%;
+            max-width: 750px;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(135, 206, 235, 0.3);
+        }
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #87ceeb;
+        }
+        .btn-discord {
+            background: #5865F2;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-discord:hover {
+            background: #4752C4;
+        }
+
         /* Logo & Header */
         .header-logo {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .logo-circle {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(0, 191, 255, 0.2), rgba(15, 23, 42, 0.8));
-            border: 2px solid #87ceeb;
-            box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-        }
-        .logo-symbol {
-            font-size: 55px;
-            color: #87ceeb;
-            text-shadow: 0 0 15px #00bfff;
-        }
-        h1 {
-            margin: 5px 0;
-            font-size: 1.8rem;
-            letter-spacing: 2px;
-            color: #e2e8f0;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        }
-
-        /* Balance Boxes */
-        .balance-container {
-            display: flex;
-            gap: 20px;
             margin-bottom: 20px;
-            font-size: 1.1em;
-            width: 100%;
-            max-width: 750px;
+        .btn-danger {
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
         }
-        .balance-box {
-            flex: 1;
-            background: rgba(15, 23, 42, 0.85);
-            padding: 12px 20px;
-            border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.15);
-            text-align: center;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
-
-        /* Cards */
-        .card {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(135, 206, 235, 0.2);
-            border-radius: 8px;
-            padding: 20px;
-            width: 100%;
-            max-width: 750px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-        }
-        .card h2 {
-            margin-top: 0;
-            color: #e2e8f0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 10px;
-            font-size: 1.3rem;
-            text-align: center;
-        }
-
-        /* Inputs & Buttons */
-        .action-inputs {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 15px 0;
-            flex-wrap: wrap;
-        }
-        input, select {
-            padding: 8px 12px;
-            border-radius: 4px;
-            border: 1px solid rgba(135, 206, 235, 0.3);
-            background: #0f172a;
-            color: #f8fafc;
-            outline: none;
-        }
-        input:focus, select:focus {
-            border-color: #87ceeb;
-            box-shadow: 0 0 5px rgba(135, 206, 235, 0.5);
-        }
-        .btn {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            color: #e2e8f0;
-            border: 1px solid rgba(135, 206, 235, 0.4);
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .btn:hover {
-            background: rgba(135, 206, 235, 0.2);
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
             color: #fff;
-            border-color: #87ceeb;
-            box-shadow: 0 0 10px rgba(135, 206, 235, 0.3);
         }
 
         /* Table */
@@ -152,71 +97,55 @@
 </head>
 <body>
 
-    <div class="header-logo">
-        <div class="logo-circle">
-            <span class="logo-symbol">🐉</span>
-        </div>
-        <h1>Boutique d'Enchantement</h1>
-    </div>
-
-    <div class="balance-container">
-        <div class="balance-box">
-            🪙 Or de la boutique : <strong id="gold-balance" style="color: #ffd700;">0</strong> septims
-        </div>
-        <div class="balance-box">
-            💎 Valeur du stock : <strong id="stock-value" style="color: #87ceeb;">0</strong> septims
+    <div class="auth-bar">
+        <div id="auth-container">
+            <a id="discord-login-btn" href="#" class="btn-discord">
+                <span>Se connecter avec Discord</span>
+            </a>
         </div>
     </div>
 
-    <div class="card">
-        <h2>Gestion de l'Or en Caisse</h2>
+        <h2>Gestion des Employés</h2>
         <div class="action-inputs">
-            <input type="number" id="gold-qty" value="100" min="1">
-            <button class="btn" onclick="modifyGold(1)">+ Ajouter Or</button>
-            <button class="btn" onclick="modifyGold(-1)">- Retirer Or</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Stock de Gemmes Spirituelles</h2>
-        <div class="action-inputs">
-            <select id="gem-select">
-                <option value="Gemme Spirituelle (Vide)">Gemme Spirituelle (Vide)</option>
-                <option value="Gemme Spirituelle (Pleine)">Gemme Spirituelle (Pleine)</option>
-            </select>
-            <input type="number" id="gem-qty" value="1" min="1">
-            <button class="btn" onclick="modifyGem(1)">Déposer</button>
-            <button class="btn" onclick="modifyGem(-1)">Retirer / Vendre</button>
+            <input type="text" id="emp-name" placeholder="Nom du registre / RP">
+            <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
+            <input type="number" id="emp-salary" placeholder="Salaire (septims)" min="0">
+            <button class="btn" onclick="addEmployee()">+ Recruter</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>Gemme Spirituelle</th>
-                    <th class="right">Prix Unitaire</th>
-                    <th class="right">Stock</th>
-                    <th class="right">Valeur Totale</th>
+                    <th>Employé</th>
+                    <th>Rôle</th>
+                    <th class="right">Salaire</th>
+                    <th class="right">Actions</th>
                 </tr>
             </thead>
-            <tbody id="inventory-list"></tbody>
+            <tbody id="employee-list"></tbody>
         </table>
     </div>
 
     <script>
+        // CONFIGURATION DISCORD (Remplace CLIENT_ID par ton ID d'application Discord)
+        const DISCORD_CLIENT_ID = 'TON_CLIENT_ID_ICI'; 
+        const REDIRECT_URI = window.location.href.split('#')[0];
+        const DISCORD_AUTH_URL = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
+
+        document.getElementById('discord-login-btn').href = DISCORD_AUTH_URL;
+
+        // Gestion de la sauvegarde locale
         let data = JSON.parse(localStorage.getItem('skyrim_enchant_data_simple')) || {
             gold: 1250,
             gems: {
                 "Gemme Spirituelle (Vide)": { qty: 10, price: 7 },
                 "Gemme Spirituelle (Pleine)": { qty: 5, price: 15 }
-            }
-        };
-
         function saveAndRender() {
             localStorage.setItem('skyrim_enchant_data_simple', JSON.stringify(data));
             document.getElementById('gold-balance').innerText = data.gold.toLocaleString();
 
+            // Rendu Inventaire
             const list = document.getElementById('inventory-list');
             list.innerHTML = '';
-            
             let totalStockValue = 0;
 
             for (const [name, info] of Object.entries(data.gems)) {
@@ -232,8 +161,26 @@
                     </tr>
                 `;
             }
-
             document.getElementById('stock-value').innerText = totalStockValue.toLocaleString();
+
+            // Rendu Employés
+            const empList = document.getElementById('employee-list');
+            empList.innerHTML = '';
+            if (!data.employees) data.employees = [];
+
+            data.employees.forEach(emp => {
+                empList.innerHTML += `
+                    <tr>
+                        <td><strong>${emp.name}</strong></td>
+                        <td>${emp.role}</td>
+                        <td class="right">${emp.salary} septims</td>
+                        <td class="right">
+                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
+                            <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
         function modifyGold(direction) {
@@ -251,6 +198,35 @@
             }
         }
 
+        function addEmployee() {
+            const name = document.getElementById('emp-name').value.trim();
+            const role = document.getElementById('emp-role').value.trim() || 'Employé';
+            const salary = parseInt(document.getElementById('emp-salary').value) || 0;
+
+            if (name) {
+                data.employees.push({ id: Date.now(), name, role, salary });
+                document.getElementById('emp-name').value = '';
+                document.getElementById('emp-role').value = '';
+                document.getElementById('emp-salary').value = '';
+                saveAndRender();
+            }
+        }
+
+        function removeEmployee(id) {
+            data.employees = data.employees.filter(emp => emp.id !== id);
+            saveAndRender();
+        }
+
+        function payEmployee(id, salary) {
+            if (data.gold >= salary) {
+                data.gold -= salary;
+                saveAndRender();
+            } else {
+                alert("Pas assez d'or en caisse pour verser le salaire !");
+            }
+        }
+
+        handleDiscordAuth();
         saveAndRender();
     </script>
 </body>
