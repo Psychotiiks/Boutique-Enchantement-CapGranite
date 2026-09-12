@@ -6,7 +6,9 @@
     <title>Boutique d'Enchantement - Skyrim RP</title>
     <style>
         * { box-sizing: border-box; }
+        
         body {
+            visibility: hidden;
             background: radial-gradient(circle at center, rgba(17, 23, 38, 0.85) 0%, rgba(8, 10, 16, 0.95) 70%, #030406 100%),
                         url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80') no-repeat center top fixed;
             background-size: cover;
@@ -20,25 +22,24 @@
             min-height: 100vh;
         }
 
-        /* Écran de verrouillage si non connecté */
         #login-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(3, 4, 6, 0.95);
+            width: 100vw;
+            height: 100vh;
+            background: rgba(3, 4, 6, 0.98);
             backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10000;
+            z-index: 99999;
             text-align: center;
             padding: 20px;
         }
         .login-card {
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.95);
             border: 1px solid rgba(135, 206, 235, 0.3);
             border-radius: 12px;
             padding: 40px;
@@ -81,9 +82,11 @@
             text-decoration: none;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
             font-size: 1rem;
             transition: background 0.2s;
+            width: 100%;
         }
         .btn-discord:hover { background: #4752C4; }
 
@@ -271,7 +274,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            z-index: 9999;
+            z-index: 99999;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -296,15 +299,14 @@
 </head>
 <body>
 
-    <!-- Écran de connexion bloquant si non identifié -->
-    <div id="login-overlay" style="display: none;">
+    <div id="login-overlay">
         <div class="login-card">
             <div class="logo-circle" style="margin: 0 auto 15px auto;">
                 <span class="logo-symbol">ᛋ</span>
             </div>
             <h1 style="font-size: 1.4rem; margin-bottom: 10px;">Boutique d'Enchantement</h1>
-            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Veuillez vous identifier avec votre compte Discord pour accéder au registre de la boutique.</p>
-            <button onclick="loginWithDiscord()" class="btn-discord" style="width: 100%; justify-content: center;">
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Veuillez vous identifier avec votre compte Discord pour accéder au registre.</p>
+            <button onclick="loginWithDiscord()" class="btn-discord">
                 <span>Se connecter avec Discord</span>
             </button>
         </div>
@@ -344,7 +346,7 @@
             <button class="btn" onclick="submitSale()">Valider la Vente</button>
         </div>
         <p style="font-size: 0.8rem; color: #94a3b8; text-align: center; margin: 5px 0 0 0;">
-            * Une commission de 5% est versée au vendeur (ajoutée directement à son salaire), le reste va dans l'or de la boutique.
+            * Une commission de 5% est versée au vendeur (ajoutée à son salaire), le reste va dans l'or de la boutique.
         </p>
     </div>
 
@@ -429,7 +431,7 @@
 
         <div class="admin-section-divider">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Journal d'Audit (Actions Globales)</h3>
+                <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Journal d'Audit</h3>
                 <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearHistory('auditLogs')">Vider l'audit</button>
             </div>
             <div class="scrollable-table-container">
@@ -548,7 +550,6 @@
                     statusEl.innerText = "Synchronisé avec le Cloud ✨";
                     statusEl.style.color = "#4ade80";
                 } else {
-                    console.warn("Bin vide ou format non initialisé.");
                     await saveData("Initialisation initiale");
                 }
             } catch (e) {
@@ -557,6 +558,7 @@
                 statusEl.style.color = "#ef4444";
             }
             render();
+            return data;
         }
 
         async function saveData(auditMessage = null) {
@@ -586,10 +588,7 @@
                     body: JSON.stringify(data)
                 });
                 
-                const resText = await response.text();
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP ${response.status}: ${resText}`);
-                }
+                if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
                 
                 statusEl.innerText = "Synchronisé avec le Cloud ✨";
                 statusEl.style.color = "#4ade80";
@@ -597,7 +596,7 @@
                 console.error("Erreur de sauvegarde:", e);
                 statusEl.innerText = "❌ ÉCHEC DE SAUVEGARDE CLOUD";
                 statusEl.style.color = "#ef4444";
-                showToast("❌ Erreur de sauvegarde Cloud ! Regarde la console (F12)");
+                showToast("❌ Erreur de sauvegarde Cloud !");
             }
         }
 
@@ -607,57 +606,62 @@
             window.location.href = discordUrl;
         }
 
-        function handleDiscordAuth() {
+        async function handleDiscordAuth() {
             const hash = window.location.hash.substring(1);
             const params = new URLSearchParams(hash);
             const accessToken = params.get('access_token');
 
             if (accessToken) {
-                fetch('https://discord.com/api/users/@me', {
-                    headers: { authorization: `Bearer ${accessToken}` }
-                })
-                .then(res => res.json())
-                .then(user => {
+                try {
+                    const res = await fetch('https://discord.com/api/users/@me', {
+                        headers: { authorization: `Bearer ${accessToken}` }
+                    });
+                    const user = await res.json();
                     if (user.id) {
                         localStorage.setItem('discord_user', JSON.stringify(user));
                         window.history.replaceState({}, document.title, window.location.pathname);
-                        registerUser(user);
+                        await grantAccess(user);
                     } else {
-                        showLoginOverlay();
+                        keepLocked();
                     }
-                })
-                .catch(err => showLoginOverlay());
+                } catch {
+                    keepLocked();
+                }
             } else {
                 try {
                     const savedUser = JSON.parse(localStorage.getItem('discord_user'));
                     if (savedUser && savedUser.id) {
-                        registerUser(savedUser);
+                        await grantAccess(savedUser);
                     } else {
-                        showLoginOverlay();
+                        keepLocked();
                     }
-                } catch (e) {
-                    showLoginOverlay();
+                } catch {
+                    keepLocked();
                 }
             }
         }
 
-        function showLoginOverlay() {
+        function keepLocked() {
             document.getElementById('login-overlay').style.display = 'flex';
         }
 
-        function registerUser(user) {
+        async function grantAccess(user) {
             currentUser = user;
+            await loadData();
+
+            document.body.style.visibility = 'visible';
             document.getElementById('login-overlay').style.display = 'none';
+
+            renderAuth(user);
 
             if (!data.users) data.users = {};
             if (!data.users[user.id]) {
                 data.users[user.id] = { id: user.id, username: user.username, avatar: user.avatar, totalSales: 0 };
-                saveData("S'est enregistré sur l'application");
-            } else {
+                await saveData("S'est enregistré sur l'application");
+            } else if (data.users[user.id].username !== user.username || data.users[user.id].avatar !== user.avatar) {
                 data.users[user.id].username = user.username;
                 data.users[user.id].avatar = user.avatar;
-                renderAuth(user);
-                loadData();
+                await saveData();
             }
         }
 
@@ -680,7 +684,7 @@
         function logout() {
             localStorage.removeItem('discord_user');
             currentUser = null;
-            showLoginOverlay();
+            window.location.reload();
         }
 
         function submitSale() {
@@ -690,8 +694,8 @@
             const amount = Math.max(0, parseInt(document.getElementById('sale-amount').value) || 0);
 
             if (amount > 0) {
-                const shopPart = Math.round(amount * 0.95);
-                const commission = amount - shopPart;
+                const commission = Math.max(1, Math.round(amount * 0.05));
+                const shopPart = amount - commission;
 
                 data.gold += shopPart;
 
@@ -712,7 +716,7 @@
                 document.getElementById('sale-description').value = '';
                 document.getElementById('sale-amount').value = '';
                 
-                saveData(`A enregistré une vente : ${category} "${description}" pour ${amount} septims (+${commission} septims de commission au salaire)`);
+                saveData(`A enregistré une vente : ${category} "${description}" pour ${amount} septims (+${commission} de commission)`);
             }
         }
 
@@ -720,7 +724,7 @@
             if (!isAdmin()) return;
             if (data.users[userId] && confirm(`Remettre à 0 les ventes de ${data.users[userId].username} ?`)) {
                 data.users[userId].totalSales = 0;
-                saveData(`A réinitialisé le compteur de ventes de ${data.users[userId].username}`);
+                saveData(`A réinitialisé les ventes de ${data.users[userId].username}`);
             }
         }
 
@@ -728,7 +732,7 @@
             if (!isAdmin()) return;
             if (confirm("Supprimer cet utilisateur ?")) {
                 delete data.users[userId];
-                saveData("A supprimé un utilisateur de la liste");
+                saveData("A supprimé un utilisateur");
             }
         }
 
@@ -825,7 +829,7 @@
 
                 const auditList = document.getElementById('audit-list');
                 auditList.innerHTML = (!data.auditLogs || data.auditLogs.length === 0) 
-                    ? `<tr><td colspan="2" style="text-align: center; color: #64748b;">Aucune action enregistrée.</td></tr>` 
+                    ? `<tr><td colspan="2" style="text-align: center; color: #64748b;">Aucune action.</td></tr>` 
                     : data.auditLogs.map(a => `<tr><td><strong>${escapeHTML(a.author)}</strong> <span style="color: #64748b; font-size: 0.8em;">[${a.time}]</span></td><td>${escapeHTML(a.action)}</td></tr>`).join('');
             } else {
                 adminCard.style.display = 'none';
@@ -853,7 +857,7 @@
                 if (userIsAdmin) {
                     adminActionsCell = `
                         <td class="right">
-                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary}, '${emp.name}')">Payer</button>
+                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary}, '${escapeHTML(emp.name)}')">Payer</button>
                             <button class="btn btn-warning" onclick="editEmployee(${emp.id})">Modifier</button>
                             <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
                         </td>`;
@@ -876,8 +880,7 @@
             const qty = Math.max(0, parseInt(document.getElementById('gold-qty').value) || 0);
             if (qty > 0) {
                 data.gold = Math.max(0, (data.gold || 0) + (qty * direction));
-                const actionText = direction > 0 ? `A ajouté ${qty} septims en caisse` : `A retiré ${qty} septims de la caisse`;
-                saveData(actionText);
+                saveData(direction > 0 ? `A ajouté ${qty} septims en caisse` : `A retiré ${qty} septims de la caisse`);
             }
         }
 
@@ -886,8 +889,7 @@
             const qty = Math.max(0, parseInt(document.getElementById('gem-qty').value) || 0);
             if (qty > 0 && data.gems && data.gems[name] !== undefined) {
                 data.gems[name].qty = Math.max(0, data.gems[name].qty + (qty * direction));
-                const actionText = direction > 0 ? `A déposé ${qty}x ${name}` : `A retiré/vendu ${qty}x ${name}`;
-                saveData(actionText);
+                saveData(direction > 0 ? `A déposé ${qty}x ${name}` : `A retiré/vendu ${qty}x ${name}`);
             }
         }
 
@@ -911,14 +913,15 @@
 
         function removeEmployee(id) {
             if (!isAdmin()) return;
-            const emp = data.employees.find(e => e.id === id);
-            data.employees = data.employees.filter(emp => emp.id !== id);
+            // Correction du bug de type (== au lieu de === pour s'assurer de capter string/number)
+            const emp = data.employees.find(e => e.id == id);
+            data.employees = data.employees.filter(emp => emp.id != id);
             saveData(`A renvoyé l'employé ${emp ? emp.name : ''}`);
         }
 
         function editEmployee(id) {
             if (!isAdmin()) return;
-            const emp = data.employees.find(e => e.id === id);
+            const emp = data.employees.find(e => e.id == id);
             if (!emp) return;
 
             const newName = prompt(`Nom du personnage pour ${emp.name} :`, emp.name);
@@ -949,7 +952,6 @@
             }
         }
 
-        // Lancement au démarrage de la page
         handleDiscordAuth();
     </script>
 </body>
