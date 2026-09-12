@@ -230,10 +230,13 @@
             padding-top: 15px;
         }
         #sync-status {
-            font-size: 0.8rem;
-            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: bold;
             text-align: center;
             margin-bottom: 15px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
         }
 
         #toast-container {
@@ -278,7 +281,7 @@
             <span class="logo-symbol">ᛋ</span>
         </div>
         <h1>Boutique d'Enchantement</h1>
-        <div id="sync-status">Connexion au cloud en cours...</div>
+        <div><span id="sync-status">Connexion au cloud...</span></div>
     </div>
 
     <div class="balance-container">
@@ -449,7 +452,7 @@
                 "Gemme Spirituelle Pleine": { qty: 10, price: 150 }
             },
             employees: [
-                { id: 1, name: "Farengar", role: "Mage de cour", salary: 150, discordId: null }
+                { id: 1, name: "Farengار", role: "Mage de cour", salary: 150, discordId: null }
             ],
             users: {},
             salesHistory: [],
@@ -458,7 +461,6 @@
 
         let data = defaultData;
         let currentUser = null;
-        let isSaving = false;
 
         function isAdmin() {
             return currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id);
@@ -483,8 +485,10 @@
         }
 
         async function loadData() {
-            if (isSaving) return; // Empêche de charger pendant qu'on sauvegarde
             const statusEl = document.getElementById('sync-status');
+            statusEl.innerText = "Chargement du cloud...";
+            statusEl.style.color = "#fcd34d";
+            
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
                     headers: { 'X-Master-Key': JSONBIN_API_KEY }
@@ -506,21 +510,21 @@
                     statusEl.innerText = "Synchronisé avec le Cloud ✨";
                     statusEl.style.color = "#4ade80";
                 } else {
-                    console.warn("Bin vide ou format invalide, initialisation...", cloudData);
-                    await saveData("Initialisation de la base de données");
+                    console.warn("Bin vide ou format non initialisé.");
+                    await saveData("Initialisation initiale");
                 }
             } catch (e) {
-                console.error("Erreur de chargement Cloud :", e);
-                statusEl.innerText = "Erreur de synchro Cloud (regarder la console)";
+                console.error("Erreur chargement:", e);
+                statusEl.innerText = "❌ Erreur de chargement Cloud";
                 statusEl.style.color = "#ef4444";
             }
             render();
         }
 
         async function saveData(auditMessage = null) {
-            isSaving = true;
             const statusEl = document.getElementById('sync-status');
             statusEl.innerText = "Sauvegarde en cours...";
+            statusEl.style.color = "#fcd34d";
             
             if (currentUser && auditMessage) {
                 if (!data.auditLogs) data.auditLogs = [];
@@ -544,20 +548,19 @@
                     body: JSON.stringify(data)
                 });
                 
+                const resText = await response.text();
                 if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`Erreur écriture cloud (${response.status}): ${errText}`);
+                    throw new Error(`Erreur HTTP ${response.status}: ${resText}`);
                 }
                 
                 statusEl.innerText = "Synchronisé avec le Cloud ✨";
                 statusEl.style.color = "#4ade80";
             } catch (e) {
-                console.error("Erreur lors de la sauvegarde cloud :", e);
-                showToast("❌ Erreur de sauvegarde Cloud !");
-                statusEl.innerText = "Échec de sauvegarde";
+                console.error("Erreur de sauvegarde:", e);
+                statusEl.innerText = "❌ ÉCHEC DE SAUVEGARDE CLOUD";
                 statusEl.style.color = "#ef4444";
+                showToast("❌ Erreur de sauvegarde Cloud ! Regarde la console (F12)");
             }
-            isSaving = false;
         }
 
         function loginWithDiscord() {
@@ -600,12 +603,13 @@
             if (!data.users) data.users = {};
             if (!data.users[user.id]) {
                 data.users[user.id] = { id: user.id, username: user.username, avatar: user.avatar, totalSales: 0 };
+                saveData("S'est enregistré sur l'application");
             } else {
                 data.users[user.id].username = user.username;
                 data.users[user.id].avatar = user.avatar;
+                renderAuth(user);
+                render();
             }
-            renderAuth(user);
-            saveData();
         }
 
         function renderAuth(user) {
@@ -882,7 +886,7 @@
 
         function payEmployee(id, salary, empName) {
             if (!isAdmin()) return;
-            if (data.gold >=salary) {
+            if (data.gold >= salary) {
                 data.gold -= salary;
                 saveData(`A payé le salaire de ${empName} (${salary} septims)`);
             } else {
@@ -890,12 +894,9 @@
             }
         }
 
-        // Lancement initial au chargement de la page
+        // Démarrage de l'app
         handleDiscordAuth();
         loadData();
-
-        // ⚠️ Suppression du setInterval automatique pour éviter les conflits d'écrasement. 
-        // Si vous voulez actualiser sans recharger, vous pouvez recliquer ou rafraîchir manuellement.
     </script>
 </body>
 </html>
