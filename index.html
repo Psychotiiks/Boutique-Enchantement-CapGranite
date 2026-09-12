@@ -950,10 +950,21 @@
             }
         }
 
-        function payEmployee(id, salary, empName) {
+  function payEmployee(id, salary, empName) {
             if (!isAdmin()) return;
+            if (salary <= 0) {
+                alert("Cet employé n'a aucun salaire à percevoir !");
+                return;
+            }
             if (data.gold >= salary) {
                 data.gold -= salary;
+                
+                // Réinitialise le salaire de l'employé à 0 après paiement
+                const emp = data.employees.find(e => e.id == id);
+                if (emp) {
+                    emp.salary = 0;
+                }
+
                 saveData(`A payé le salaire de ${empName} (${salary} septims)`);
             } else {
                 alert("Pas assez d'or en caisse !");
