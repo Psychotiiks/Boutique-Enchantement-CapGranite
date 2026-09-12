@@ -231,9 +231,6 @@
             background: rgba(135, 206, 235, 0.3);
             border-radius: 3px;
         }
-        .scrollable-table-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(135, 206, 235, 0.6);
-        }
         .admin-section-divider {
             margin-top: 25px;
             border-top: 1px dashed rgba(135, 206, 235, 0.2);
@@ -309,21 +306,34 @@
         </table>
     </div>
 
-    <!-- Carte Administrateur -->
+    <!-- Panel Administrateur -->
     <div class="card" id="admin-users-card" style="display: none;">
         <h2>Panel Administrateur</h2>
-        
-        <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Membres Connectés & Ventes Globales</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Utilisateur Discord</th>
-                    <th class="right">Total Vendu</th>
-                    <th class="right">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="users-list"></tbody>
-        </table>
+
+        <!-- Modification des prix des gemmes -->
+        <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Modifier le Prix des Gemmes</h3>
+        <div class="action-inputs">
+            <select id="admin-gem-select">
+                <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
+                <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
+            </select>
+            <input type="number" id="admin-gem-new-price" placeholder="Nouveau prix" min="0">
+            <button class="btn btn-warning" onclick="updateGemPrice()">Changer le prix</button>
+        </div>
+
+        <div class="admin-section-divider">
+            <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Membres Connectés & Ventes Globales</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Utilisateur Discord</th>
+                        <th class="right">Total Vendu</th>
+                        <th class="right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-list"></tbody>
+            </table>
+        </div>
 
         <div class="admin-section-divider">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -373,10 +383,11 @@
         const defaultData = {
             gold: 1250,
             gems: {
-                "Gemme Spirituelle Vide": { qty: 1, price: 7 },
-                "Gemme Spirituelle Pleine": { qty: 1, price: 11 }
+                "Gemme Spirituelle Vide": { qty: 20, price: 50 },
+                "Gemme Spirituelle Pleine": { qty: 10, price: 150 }
             },
             employees: [
+                { id: 1, name: "Farengar", role: "Mage de cour", salary: 150 }
             ],
             users: {},
             salesHistory: []
@@ -384,7 +395,7 @@
 
         let data;
         try {
-            const stored = localStorage.getItem('skyrim_gems_data_v4');
+            const stored = localStorage.getItem('skyrim_gems_data_v5');
             data = stored ? JSON.parse(stored) : defaultData;
             if (!data.salesHistory) data.salesHistory = [];
         } catch (e) {
@@ -512,7 +523,6 @@
                     data.users[currentUser.id].totalSales += amount;
                 }
 
-                // Ajout à l'historique (les ventes récentes en haut)
                 data.salesHistory.unshift({
                     seller: currentUser.username,
                     item: description,
@@ -557,8 +567,25 @@
             }
         }
 
+        function updateGemPrice() {
+            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+
+            const gemName = document.getElementById('admin-gem-select').value;
+            const newPrice = parseInt(document.getElementById('admin-gem-new-price').value);
+
+            if (!isNaN(newPrice) && newPrice >= 0) {
+                if (data.gems[gemName]) {
+                    data.gems[gemName].price = newPrice;
+                    document.getElementById('admin-gem-new-price').value = '';
+                    saveAndRender();
+                }
+            } else {
+                alert("Veuillez entrer un prix valide.");
+            }
+        }
+
         function saveAndRender() {
-            localStorage.setItem('skyrim_gems_data_v4', JSON.stringify(data));
+            localStorage.setItem('skyrim_gems_data_v5', JSON.stringify(data));
             document.getElementById('gold-balance').innerText = data.gold.toLocaleString();
 
             const list = document.getElementById('inventory-list');
@@ -588,7 +615,6 @@
                 adminCard.style.display = 'block';
                 adminEmpInputs.style.display = 'flex';
                 
-                // Rendu des utilisateurs
                 const usersList = document.getElementById('users-list');
                 usersList.innerHTML = '';
 
@@ -616,7 +642,6 @@
                     usersList.appendChild(tr);
                 });
 
-                // Rendu de l'historique des ventes
                 const historyList = document.getElementById('sales-history-list');
                 historyList.innerHTML = '';
                 if (data.salesHistory.length === 0) {
