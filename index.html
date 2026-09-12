@@ -44,6 +44,7 @@
             height: 30px;
             border-radius: 50%;
             border: 1px solid #87ceeb;
+            object-fit: cover;
         }
         .btn-discord {
             background: #5865F2;
@@ -208,6 +209,7 @@
             width: 24px;
             height: 24px;
             border-radius: 50%;
+            object-fit: cover;
         }
     </style>
 </head>
@@ -317,7 +319,7 @@
     <script>
         const DISCORD_CLIENT_ID = '1548137913416679495';
 
-        let data = JSON.parse(localStorage.getItem('skyrim_gems_data_v3')) || {
+        const defaultData = {
             gold: 1250,
             gems: {
                 "Gemme Spirituelle Vide": { qty: 20, price: 50 },
@@ -329,11 +331,29 @@
             users: {}
         };
 
+        let data;
+        try {
+            const stored = localStorage.getItem('skyrim_gems_data_v3');
+            data = stored ? JSON.parse(stored) : defaultData;
+        } catch (e) {
+            console.error("Erreur de lecture du localStorage :", e);
+            data = defaultData;
+        }
+
         let currentUser = null;
 
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         function loginWithDiscord() {
-            if (DISCORD_CLIENT_ID === '1548137913416679495') {
-                alert("Erreur : Le CLIENT_ID Discord n'est pas renseigné dans le code JavaScript.");
+            if (!DISCORD_CLIENT_ID || DISCORD_CLIENT_ID === 'VOTRE_CLIENT_ID_ICI') {
+                alert("Erreur : Le CLIENT_ID Discord n'est pas renseigné.");
                 return;
             }
             const redirectUri = encodeURIComponent('https://psychotiiks.github.io/Boutique-alchimie-CapGranite/');
@@ -350,7 +370,10 @@
                 fetch('https://discord.com/api/users/@me', {
                     headers: { authorization: `Bearer ${accessToken}` }
                 })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('Échec de la requête OAuth');
+                    return res.json();
+                })
                 .then(user => {
                     if (user.id) {
                         localStorage.setItem('discord_user', JSON.stringify(user));
@@ -359,13 +382,17 @@
                     }
                 })
                 .catch(err => {
-                    console.error("Erreur d'authentification Discord:", err);
+                    console.error("Erreur d'authentification Discord :", err);
                     renderAuth(null);
                 });
             } else {
-                const savedUser = JSON.parse(localStorage.getItem('discord_user'));
-                if (savedUser) registerUser(savedUser);
-                else renderAuth(null);
+                try {
+                    const savedUser = JSON.parse(localStorage.getItem('discord_user'));
+                    if (savedUser) registerUser(savedUser);
+                    else renderAuth(null);
+                } catch (e) {
+                    renderAuth(null);
+                }
             }
         }
 
@@ -398,8 +425,8 @@
                     : 'https://cdn.discordapp.com/embed/avatars/0.png';
                 container.innerHTML = `
                     <div class="user-profile">
-                        <img class="user-avatar" src="${avatarUrl}" alt="Avatar">
-                        <span>${user.username}</span>
+                        <img class="user-avatar" src="${escapeHTML(avatarUrl)}" alt="Avatar">
+                        <span>${escapeHTML(user.username)}</span>
                         <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8em;" onclick="logout()">Déconnexion</button>
                     </div>
                 `;
@@ -428,7 +455,9 @@
 
             if (amount > 0) {
                 data.gold += amount;
-                data.users[currentUser.id].totalSales += amount;
+                if (data.users[currentUser.id]) {
+                    data.users[currentUser.id].totalSales += amount;
+                }
                 
                 document.getElementById('sale-description').value = '';
                 document.getElementById('sale-amount').value = '';
@@ -463,7 +492,7 @@
 
                 list.innerHTML += `
                     <tr>
-                        <td>${name}</td>
+                        <td>${escapeHTML(name)}</td>
                         <td class="right">${info.price} septims</td>
                         <td class="right">${info.qty}</td>
                         <td class="right">${totalValue.toLocaleString()} septims</td>
@@ -485,13 +514,13 @@
                     <tr>
                         <td>
                             <div class="user-cell">
-                                <img class="mini-avatar" src="${avatarUrl}" alt="">
-                                <span>${u.username}</span>
+                                <img class="mini-avatar" src="${escapeHTML(avatarUrl)}" alt="">
+                                <span>${escapeHTML(u.username)}</span>
                             </div>
                         </td>
                         <td class="right">${u.totalSales.toLocaleString()} septims</td>
                         <td class="right">
-                            <button class="btn btn-danger" onclick="removeUser('${u.id}')">Supprimer</button>
+                            <button class="btn btn-danger" onclick="removeUser('${escapeHTML(u.id)}')">Supprimer</button>
                         </td>
                     </tr>
                 `;
@@ -505,8 +534,8 @@
             data.employees.forEach(emp => {
                 empList.innerHTML += `
                     <tr>
-                        <td><strong>${emp.name}</strong></td>
-                        <td>${emp.role}</td>
+                        <td><strong>${escapeHTML(emp.name)}</strong></td>
+                        <td>${escapeHTML(emp.role)}</td>
                         <td class="right">${emp.salary} septims</td>
                         <td class="right">
                             <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
