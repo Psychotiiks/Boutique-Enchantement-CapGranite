@@ -416,16 +416,23 @@
 
     <div class="card">
         <h2>Gestion des Employés RP</h2>
-        <div class="action-inputs" id="admin-employee-inputs" style="display: none;">
-            <input type="text" id="emp-name" placeholder="Nom du registre / RP">
-            <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
-            <input type="number" id="emp-salary" placeholder="Salaire (septims)" min="0">
-            <button class="btn" onclick="addEmployee()">+ Recruter</button>
+        <div class="action-inputs" id="admin-employee-inputs" style="display: none; flex-direction: column; align-items: center;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
+                <input type="text" id="emp-name" placeholder="Nom du personnage RP">
+                <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
+                <input type="number" id="emp-salary" placeholder="Salaire (septims)" min="0">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center; width: 100%;">
+                <select id="emp-discord-select" style="max-width: 300px; flex: 1;">
+                    <option value="">-- Lier à un compte Discord (Optionnel) --</option>
+                </select>
+                <button class="btn" onclick="addEmployee()">+ Recruter</button>
+            </div>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>Employé</th>
+                    <th>Employé / Joueur</th>
                     <th>Rôle</th>
                     <th class="right">Salaire</th>
                     <th class="right">Actions</th>
@@ -439,8 +446,6 @@
 
     <script>
         const DISCORD_CLIENT_ID = '1548137913416679495';
-        
-        // Liste des administrateurs (Vous pouvez en ajouter d'autres en séparant par des virgules)
         const ADMIN_DISCORD_IDS = ['232537879207739394'];
 
         const JSONBIN_BIN_ID = '6aa4e254ac6210605ac36471';
@@ -453,7 +458,7 @@
                 "Gemme Spirituelle Pleine": { qty: 10, price: 150 }
             },
             employees: [
-                { id: 1, name: "Farengar", role: "Mage de cour", salary: 150 }
+                { id: 1, name: "Farengar", role: "Mage de cour", salary: 150, discordId: null }
             ],
             users: {},
             salesHistory: [],
@@ -497,8 +502,8 @@
                 const newData = result.record;
                 if (!newData.salesHistory) newData.salesHistory = [];
                 if (!newData.auditLogs) newData.auditLogs = [];
+                if (!newData.employees) newData.employees = [];
 
-                // Vérifier si des données ont changé par rapport à l'affichage actuel
                 const newChecksum = JSON.stringify(newData);
                 if (lastChecksum && lastChecksum !== newChecksum) {
                     showToast("⚡ Mise à jour détectée en direct !");
@@ -523,7 +528,7 @@
                     action: auditMessage,
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 });
-                if (data.auditLogs.length > 50) data.auditLogs.pop(); // Garder max 50 logs
+                if (data.auditLogs.length > 50) data.auditLogs.pop();
             }
 
             lastChecksum = JSON.stringify(data);
@@ -625,8 +630,6 @@
 
             if (amount > 0) {
                 const shopPart = Math.round(amount * 0.8);
-                const sellerPart = amount - shopPart;
-
                 data.gold += shopPart;
                 if (data.users[currentUser.id]) {
                     data.users[currentUser.id].totalSales += amount;
@@ -707,6 +710,17 @@
                 adminCard.style.display = 'block';
                 adminEmpInputs.style.display = 'flex';
                 
+                // Mettre à jour la liste déroulante Discord pour les employés
+                const empDiscordSelect = document.getElementById('emp-discord-select');
+                if (empDiscordSelect) {
+                    const currentVal = empDiscordSelect.value;
+                    empDiscordSelect.innerHTML = `<option value="">-- Lier à un compte Discord (Optionnel) --</option>`;
+                    Object.values(data.users).forEach(u => {
+                        empDiscordSelect.innerHTML += `<option value="${u.id}">${escapeHTML(u.username)}</option>`;
+                    });
+                    empDiscordSelect.value = currentVal;
+                }
+
                 const usersList = document.getElementById('users-list');
                 usersList.innerHTML = '';
                 Object.values(data.users).forEach(u => {
@@ -743,13 +757,28 @@
             if (!data.employees) data.employees = [];
 
             data.employees.forEach(emp => {
+                let discordInfo = '';
+                if (emp.discordId && data.users[emp.discordId]) {
+                    const u = data.users[emp.discordId];
+                    const avatarUrl = u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    discordInfo = `
+                        <div style="font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin-top: 4px;">
+                            <img class="mini-avatar" src="${escapeHTML(avatarUrl)}" style="width: 16px; height: 16px;">
+                            <span>@${escapeHTML(u.username)}</span>
+                        </div>`;
+                }
+
                 let adminActions = userIsAdmin ? `
-                    <button class="btn btn-warning" onclick="editEmployeeSalary(${emp.id})">Modifier</button>
+                    <button class="btn btn-warning" onclick="editEmployee(${emp.id})">Modifier</button>
                     <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
                 ` : '';
+
                 empList.innerHTML += `
                     <tr>
-                        <td><strong>${escapeHTML(emp.name)}</strong></td>
+                        <td>
+                            <strong>${escapeHTML(emp.name)}</strong>
+                            ${discordInfo}
+                        </td>
                         <td>${escapeHTML(emp.role)}</td>
                         <td class="right">${emp.salary} septims</td>
                         <td class="right">
@@ -784,12 +813,14 @@
             const name = document.getElementById('emp-name').value.trim();
             const role = document.getElementById('emp-role').value.trim() || 'Employé';
             const salary = Math.max(0, parseInt(document.getElementById('emp-salary').value) || 0);
+            const discordId = document.getElementById('emp-discord-select').value;
 
             if (name) {
-                data.employees.push({ id: Date.now(), name, role, salary });
+                data.employees.push({ id: Date.now(), name, role, salary, discordId: discordId || null });
                 document.getElementById('emp-name').value = '';
                 document.getElementById('emp-role').value = '';
                 document.getElementById('emp-salary').value = '';
+                document.getElementById('emp-discord-select').value = '';
                 saveData(`A recruté l'employé ${name} (${role})`);
             }
         }
@@ -801,17 +832,26 @@
             saveData(`A renvoyé l'employé ${emp ? emp.name : ''}`);
         }
 
-        function editEmployeeSalary(id) {
+        function editEmployee(id) {
             if (!isAdmin()) return;
             const emp = data.employees.find(e => e.id === id);
             if (!emp) return;
-            const newSalary = prompt(`Nouveau salaire pour ${emp.name} :`, emp.salary);
-            if (newSalary !== null) {
-                const parsed = parseInt(newSalary);
-                if (!isNaN(parsed) && parsed >= 0) {
-                    emp.salary = parsed;
-                    saveData(`A modifié le salaire de ${emp.name} à ${parsed} septims`);
-                }
+
+            const newName = prompt(`Nom du personnage pour ${emp.name} :`, emp.name);
+            if (newName === null) return;
+            const newRole = prompt(`Rôle pour ${emp.name} :`, emp.role);
+            if (newRole === null) return;
+            const newSalary = prompt(`Salaire pour ${emp.name} :`, emp.salary);
+            if (newSalary === null) return;
+
+            const parsedSalary = parseInt(newSalary);
+            if (newName.trim() && !isNaN(parsedSalary) && parsedSalary >= 0) {
+                emp.name = newName.trim();
+                emp.role = newRole.trim() || 'Employé';
+                emp.salary = parsedSalary;
+                saveData(`A modifié les informations de l'employé ${emp.name}`);
+            } else {
+                alert("Valeurs invalides.");
             }
         }
 
