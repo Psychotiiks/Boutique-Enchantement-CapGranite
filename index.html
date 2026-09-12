@@ -8,7 +8,6 @@
         * { box-sizing: border-box; }
         
         body {
-            visibility: hidden;
             background: radial-gradient(circle at center, rgba(17, 23, 38, 0.85) 0%, rgba(8, 10, 16, 0.95) 70%, #030406 100%),
                         url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80') no-repeat center top fixed;
             background-size: cover;
@@ -20,6 +19,13 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+        }
+
+        #app-container {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
         }
 
         #login-overlay {
@@ -312,168 +318,170 @@
         </div>
     </div>
 
-    <div class="auth-bar">
-        <div id="auth-container"></div>
-    </div>
-
-    <div class="header-logo">
-        <div class="logo-circle">
-            <span class="logo-symbol">ᛋ</span>
-        </div>
-        <h1>Boutique d'Enchantement</h1>
-        <div><span id="sync-status">Connexion au cloud...</span></div>
-    </div>
-
-    <div class="balance-container">
-        <div class="balance-box">
-            Or de la boutique : <strong id="gold-balance" style="color: #ffd700;">0</strong> septims
-        </div>
-        <div class="balance-box">
-            Valeur du stock : <strong id="stock-value" style="color: #87ceeb;">0</strong> septims
-        </div>
-    </div>
-
-    <div class="card" id="user-sales-card">
-        <h2>Enregistrer une Vente</h2>
-        <div class="action-inputs">
-            <select id="item-category">
-                <option value="Arme">⚔️ Arme Enchantée</option>
-                <option value="Armure">🛡️ Armure Enchantée</option>
-                <option value="Bijou">💍 Bijou Enchanté</option>
-            </select>
-            <input type="text" id="sale-description" placeholder="Nom/Description (ex: Épée de feu)">
-            <input type="number" id="sale-amount" placeholder="Prix de vente (septims)" min="1">
-            <button class="btn" onclick="submitSale()">Valider la Vente</button>
-        </div>
-        <p style="font-size: 0.8rem; color: #94a3b8; text-align: center; margin: 5px 0 0 0;">
-            * Une commission de 5% est versée au vendeur (ajoutée à son salaire), le reste va dans l'or de la boutique.
-        </p>
-    </div>
-
-    <div class="card">
-        <h2>Gestion de la Caisse</h2>
-        <div class="action-inputs">
-            <input type="number" id="gold-qty" value="100" min="1">
-            <button class="btn" onclick="modifyGold(1)">+ Ajouter Or</button>
-            <button class="btn" onclick="modifyGold(-1)">- Retirer Or</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Stock de Gemmes Spirituelles</h2>
-        <div class="action-inputs">
-            <select id="gem-select">
-                <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
-                <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
-            </select>
-            <input type="number" id="gem-qty" value="1" min="1">
-            <button class="btn" onclick="modifyGem(1)">Déposer</button>
-            <button class="btn" onclick="modifyGem(-1)">Retirer / Vendre</button>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Gemme Spirituelle</th>
-                    <th class="right">Prix Unitaire</th>
-                    <th class="right">Stock</th>
-                    <th class="right">Valeur Totale</th>
-                </tr>
-            </thead>
-            <tbody id="inventory-list"></tbody>
-        </table>
-    </div>
-
-    <div class="card" id="admin-users-card" style="display: none;">
-        <h2>Panel Administrateur</h2>
-
-        <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Modifier le Prix des Gemmes</h3>
-        <div class="action-inputs">
-            <select id="admin-gem-select">
-                <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
-                <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
-            </select>
-            <input type="number" id="admin-gem-new-price" placeholder="Nouveau prix" min="0">
-            <button class="btn btn-warning" onclick="updateGemPrice()">Changer le prix</button>
+    <div id="app-container">
+        <div class="auth-bar">
+            <div id="auth-container"></div>
         </div>
 
-        <div class="admin-section-divider">
-            <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Membres Connectés & Ventes Globales</h3>
+        <div class="header-logo">
+            <div class="logo-circle">
+                <span class="logo-symbol">ᛋ</span>
+            </div>
+            <h1>Boutique d'Enchantement</h1>
+            <div><span id="sync-status">Connexion au cloud...</span></div>
+        </div>
+
+        <div class="balance-container">
+            <div class="balance-box">
+                Or de la boutique : <strong id="gold-balance" style="color: #ffd700;">0</strong> septims
+            </div>
+            <div class="balance-box">
+                Valeur du stock : <strong id="stock-value" style="color: #87ceeb;">0</strong> septims
+            </div>
+        </div>
+
+        <div class="card" id="user-sales-card">
+            <h2>Enregistrer une Vente</h2>
+            <div class="action-inputs">
+                <select id="item-category">
+                    <option value="Arme">⚔️ Arme Enchantée</option>
+                    <option value="Armure">🛡️ Armure Enchantée</option>
+                    <option value="Bijou">💍 Bijou Enchanté</option>
+                </select>
+                <input type="text" id="sale-description" placeholder="Nom/Description (ex: Épée de feu)">
+                <input type="number" id="sale-amount" placeholder="Prix de vente (septims)" min="1">
+                <button class="btn" onclick="submitSale()">Valider la Vente</button>
+            </div>
+            <p style="font-size: 0.8rem; color: #94a3b8; text-align: center; margin: 5px 0 0 0;">
+                * Une commission de 5% est versée au vendeur (ajoutée à son salaire), le reste va dans l'or de la boutique.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>Gestion de la Caisse</h2>
+            <div class="action-inputs">
+                <input type="number" id="gold-qty" value="100" min="1">
+                <button class="btn" onclick="modifyGold(1)">+ Ajouter Or</button>
+                <button class="btn" onclick="modifyGold(-1)">- Retirer Or</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Stock de Gemmes Spirituelles</h2>
+            <div class="action-inputs">
+                <select id="gem-select">
+                    <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
+                    <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
+                </select>
+                <input type="number" id="gem-qty" value="1" min="1">
+                <button class="btn" onclick="modifyGem(1)">Déposer</button>
+                <button class="btn" onclick="modifyGem(-1)">Retirer / Vendre</button>
+            </div>
             <table>
                 <thead>
                     <tr>
-                        <th>Utilisateur Discord</th>
-                        <th class="right">Total Vendu</th>
-                        <th class="right">Actions</th>
+                        <th>Gemme Spirituelle</th>
+                        <th class="right">Prix Unitaire</th>
+                        <th class="right">Stock</th>
+                        <th class="right">Valeur Totale</th>
                     </tr>
                 </thead>
-                <tbody id="users-list"></tbody>
+                <tbody id="inventory-list"></tbody>
             </table>
         </div>
 
-        <div class="admin-section-divider">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Historique des Ventes</h3>
-                <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearHistory('salesHistory')">Vider</button>
-            </div>
-            <div class="scrollable-table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Vendeur</th>
-                            <th>Type & Item</th>
-                            <th class="right">Prix</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sales-history-list"></tbody>
-                </table>
-            </div>
-        </div>
+        <div class="card" id="admin-users-card" style="display: none;">
+            <h2>Panel Administrateur</h2>
 
-        <div class="admin-section-divider">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Journal d'Audit</h3>
-                <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearHistory('auditLogs')">Vider l'audit</button>
-            </div>
-            <div class="scrollable-table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Auteur</th>
-                            <th>Action Réalisée</th>
-                        </tr>
-                    </thead>
-                    <tbody id="audit-list"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Registre des Employés RP</h2>
-        <div class="action-inputs" id="admin-employee-inputs" style="display: none; flex-direction: column; align-items: center;">
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
-                <input type="text" id="emp-name" placeholder="Nom du personnage RP">
-                <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
-                <input type="number" id="emp-salary" placeholder="Salaire de base (septims)" min="0">
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center; width: 100%;">
-                <select id="emp-discord-select" style="max-width: 300px; flex: 1;">
-                    <option value="">-- Lier à un compte Discord (Optionnel) --</option>
+            <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Modifier le Prix des Gemmes</h3>
+            <div class="action-inputs">
+                <select id="admin-gem-select">
+                    <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
+                    <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
                 </select>
-                <button class="btn" onclick="addEmployee()">+ Recruter</button>
+                <input type="number" id="admin-gem-new-price" placeholder="Nouveau prix" min="0">
+                <button class="btn btn-warning" onclick="updateGemPrice()">Changer le prix</button>
+            </div>
+
+            <div class="admin-section-divider">
+                <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Membres Connectés & Ventes Globales</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Utilisateur Discord</th>
+                            <th class="right">Total Vendu</th>
+                            <th class="right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-list"></tbody>
+                </table>
+            </div>
+
+            <div class="admin-section-divider">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Historique des Ventes</h3>
+                    <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearHistory('salesHistory')">Vider</button>
+                </div>
+                <div class="scrollable-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Vendeur</th>
+                                <th>Type & Item</th>
+                                <th class="right">Prix</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-history-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="admin-section-divider">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Journal d'Audit</h3>
+                    <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearHistory('auditLogs')">Vider l'audit</button>
+                </div>
+                <div class="scrollable-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Auteur</th>
+                                <th>Action Réalisée</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-list"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Employé / Joueur</th>
-                    <th>Rôle</th>
-                    <th class="right">Salaire (Base + Com 5%)</th>
-                    <th class="right" id="th-actions-header" style="display: none;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="employee-list"></tbody>
-        </table>
+
+        <div class="card">
+            <h2>Registre des Employés RP</h2>
+            <div class="action-inputs" id="admin-employee-inputs" style="display: none; flex-direction: column; align-items: center;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
+                    <input type="text" id="emp-name" placeholder="Nom du personnage RP">
+                    <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
+                    <input type="number" id="emp-salary" placeholder="Salaire de base (septims)" min="0">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center; width: 100%;">
+                    <select id="emp-discord-select" style="max-width: 300px; flex: 1;">
+                        <option value="">-- Lier à un compte Discord (Optionnel) --</option>
+                    </select>
+                    <button class="btn" onclick="addEmployee()">+ Recruter</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employé / Joueur</th>
+                        <th>Rôle</th>
+                        <th class="right">Salaire (Base + Com 5%)</th>
+                        <th class="right" id="th-actions-header" style="display: none;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employee-list"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="toast-container"></div>
@@ -643,14 +651,15 @@
 
         function keepLocked() {
             document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
         }
 
         async function grantAccess(user) {
             currentUser = user;
             await loadData();
 
-            document.body.style.visibility = 'visible';
             document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app-container').style.display = 'flex';
 
             renderAuth(user);
 
@@ -913,7 +922,6 @@
 
         function removeEmployee(id) {
             if (!isAdmin()) return;
-            // Correction du bug de type (== au lieu de === pour s'assurer de capter string/number)
             const emp = data.employees.find(e => e.id == id);
             data.employees = data.employees.filter(emp => emp.id != id);
             saveData(`A renvoyé l'employé ${emp ? emp.name : ''}`);
