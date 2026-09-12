@@ -236,6 +236,12 @@
             border-top: 1px dashed rgba(135, 206, 235, 0.2);
             padding-top: 15px;
         }
+        #sync-status {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -253,6 +259,7 @@
             <span class="logo-symbol">ᛋ</span>
         </div>
         <h1>Boutique d'Enchantement</h1>
+        <div id="sync-status">Connexion au cloud en cours...</div>
     </div>
 
     <div class="balance-container">
@@ -310,7 +317,6 @@
     <div class="card" id="admin-users-card" style="display: none;">
         <h2>Panel Administrateur</h2>
 
-        <!-- Modification des prix des gemmes -->
         <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Modifier le Prix des Gemmes</h3>
         <div class="action-inputs">
             <select id="admin-gem-select">
@@ -380,6 +386,10 @@
         const DISCORD_CLIENT_ID = '1548137913416679495';
         const ADMIN_DISCORD_ID = '232537879207739394';
 
+        // IDENTIFIANTS CLOUD INTÉGRÉS
+        const JSONBIN_BIN_ID = '6aa4e254ac6210605ac36471';
+        const JSONBIN_API_KEY = '$2a$10$A6xORNqdqhQ3gC8.y3Ub3.h9Ko95w.5wJEgbcWNDTDMMt6vO5xyp2';
+
         const defaultData = {
             gold: 1250,
             gems: {
@@ -393,16 +403,7 @@
             salesHistory: []
         };
 
-        let data;
-        try {
-            const stored = localStorage.getItem('skyrim_gems_data_v5');
-            data = stored ? JSON.parse(stored) : defaultData;
-            if (!data.salesHistory) data.salesHistory = [];
-        } catch (e) {
-            console.error("Erreur de lecture du localStorage :", e);
-            data = defaultData;
-        }
-
+        let data = defaultData;
         let currentUser = null;
 
         function escapeHTML(str) {
@@ -414,12 +415,47 @@
                 .replace(/'/g, "&#039;");
         }
 
+        async function loadData() {
+            const statusEl = document.getElementById('sync-status');
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                });
+                if (!response.ok) throw new Error('Erreur réseau Cloud');
+                const result = await response.json();
+                data = result.record;
+                if (!data.salesHistory) data.salesHistory = [];
+                statusEl.innerText = "Synchronisé en direct avec le Cloud ✨";
+                statusEl.style.color = "#4ade80";
+            } catch (e) {
+                console.error("Erreur de chargement Cloud :", e);
+                statusEl.innerText = "Erreur de synchronisation Cloud";
+                statusEl.style.color = "#ef4444";
+            }
+            render();
+        }
+
+        async function saveData() {
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_API_KEY
+                    },
+                    body: JSON.stringify(data)
+                });
+            } catch (e) {
+                console.error("Erreur lors de la sauvegarde cloud :", e);
+            }
+        }
+
         function loginWithDiscord() {
             if (!DISCORD_CLIENT_ID) {
                 alert("Erreur : Le CLIENT_ID Discord n'est pas renseigné.");
                 return;
             }
-            const redirectUri = encodeURIComponent('https://psychotiiks.github.io/Boutique-Enchantement-CapGranite/');
+            const redirectUri = encodeURIComponent(window.location.href.split('?')[0].split('#')[0]);
             const discordUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify`;
             window.location.href = discordUrl;
         }
@@ -461,21 +497,14 @@
 
         function registerUser(user) {
             currentUser = user;
-
             if (!data.users[user.id]) {
-                data.users[user.id] = {
-                    id: user.id,
-                    username: user.username,
-                    avatar: user.avatar,
-                    totalSales: 0
-                };
+                data.users[user.id] = { id: user.id, username: user.username, avatar: user.avatar, totalSales: 0 };
             } else {
                 data.users[user.id].username = user.username;
                 data.users[user.id].avatar = user.avatar;
             }
-
             renderAuth(user);
-            saveAndRender();
+            saveData().then(() => render());
         }
 
         function renderAuth(user) {
@@ -483,9 +512,7 @@
             const salesCard = document.getElementById('user-sales-card');
 
             if (user && currentUser) {
-                const avatarUrl = user.avatar 
-                    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` 
-                    : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
                 container.innerHTML = `
                     <div class="user-profile">
                         <img class="user-avatar" src="${escapeHTML(avatarUrl)}" alt="Avatar">
@@ -495,11 +522,7 @@
                 `;
                 salesCard.style.display = 'block';
             } else {
-                container.innerHTML = `
-                    <button onclick="loginWithDiscord()" class="btn-discord">
-                        <span>Se connecter avec Discord</span>
-                    </button>
-                `;
+                container.innerHTML = `<button onclick="loginWithDiscord()" class="btn-discord"><span>Se connecter avec Discord</span></button>`;
                 salesCard.style.display = 'none';
             }
         }
@@ -508,12 +531,11 @@
             localStorage.removeItem('discord_user');
             currentUser = null;
             renderAuth(null);
-            saveAndRender();
+            render();
         }
 
         function submitSale() {
             if (!currentUser) return;
-
             const description = document.getElementById('sale-description').value.trim() || 'Item enchanté';
             const amount = Math.max(0, parseInt(document.getElementById('sale-amount').value) || 0);
 
@@ -522,70 +544,54 @@
                 if (data.users[currentUser.id]) {
                     data.users[currentUser.id].totalSales += amount;
                 }
-
-                data.salesHistory.unshift({
-                    seller: currentUser.username,
-                    item: description,
-                    price: amount
-                });
+                data.salesHistory.unshift({ seller: currentUser.username, item: description, price: amount });
                 
                 document.getElementById('sale-description').value = '';
                 document.getElementById('sale-amount').value = '';
                 
-                saveAndRender();
+                saveData().then(() => render());
             }
         }
 
         function resetUserSales(userId) {
-            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) {
-                alert("Action non autorisée.");
-                return;
-            }
-
-            if (data.users[userId]) {
-                if (confirm(`Remettre à 0 septims les ventes de ${data.users[userId].username} ?`)) {
-                    data.users[userId].totalSales = 0;
-                    saveAndRender();
-                }
+            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            if (data.users[userId] && confirm(`Remettre à 0 les ventes de ${data.users[userId].username} ?`)) {
+                data.users[userId].totalSales = 0;
+                saveData().then(() => render());
             }
         }
 
         function removeUser(userId) {
             if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
-            
-            if (confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) {
+            if (confirm("Supprimer cet utilisateur ?")) {
                 delete data.users[userId];
-                saveAndRender();
+                saveData().then(() => render());
             }
         }
 
         function clearSalesHistory() {
             if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
-            if (confirm("Voulez-vous vraiment vider tout l'historique des ventes ?")) {
+            if (confirm("Voulez-vous vider l'historique ?")) {
                 data.salesHistory = [];
-                saveAndRender();
+                saveData().then(() => render());
             }
         }
 
         function updateGemPrice() {
             if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
-
             const gemName = document.getElementById('admin-gem-select').value;
             const newPrice = parseInt(document.getElementById('admin-gem-new-price').value);
 
-            if (!isNaN(newPrice) && newPrice >= 0) {
-                if (data.gems[gemName]) {
-                    data.gems[gemName].price = newPrice;
-                    document.getElementById('admin-gem-new-price').value = '';
-                    saveAndRender();
-                }
+            if (!isNaN(newPrice) && newPrice >= 0 && data.gems[gemName]) {
+                data.gems[gemName].price = newPrice;
+                document.getElementById('admin-gem-new-price').value = '';
+                saveData().then(() => render());
             } else {
-                alert("Veuillez entrer un prix valide.");
+                alert("Prix invalide.");
             }
         }
 
-        function saveAndRender() {
-            localStorage.setItem('skyrim_gems_data_v5', JSON.stringify(data));
+        function render() {
             document.getElementById('gold-balance').innerText = data.gold.toLocaleString();
 
             const list = document.getElementById('inventory-list');
@@ -595,15 +601,14 @@
             for (const [name, info] of Object.entries(data.gems)) {
                 const totalValue = info.qty * info.price;
                 totalStockValue += totalValue;
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${escapeHTML(name)}</td>
-                    <td class="right">${info.price} septims</td>
-                    <td class="right">${info.qty}</td>
-                    <td class="right">${totalValue.toLocaleString()} septims</td>
+                list.innerHTML += `
+                    <tr>
+                        <td>${escapeHTML(name)}</td>
+                        <td class="right">${info.price} septims</td>
+                        <td class="right">${info.qty}</td>
+                        <td class="right">${totalValue.toLocaleString()} septims</td>
+                    </tr>
                 `;
-                list.appendChild(tr);
             }
             document.getElementById('stock-value').innerText = totalStockValue.toLocaleString();
 
@@ -617,47 +622,25 @@
                 
                 const usersList = document.getElementById('users-list');
                 usersList.innerHTML = '';
-
                 Object.values(data.users).forEach(u => {
-                    const avatarUrl = u.avatar 
-                        ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` 
-                        : 'https://cdn.discordapp.com/embed/avatars/0.png';
-                    
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>
-                            <div class="user-cell">
-                                <img class="mini-avatar" src="${escapeHTML(avatarUrl)}" alt="">
-                                <span>${escapeHTML(u.username)}</span>
-                            </div>
-                        </td>
-                        <td class="right">${u.totalSales.toLocaleString()} septims</td>
-                        <td class="right">
-                            <div class="btn-group">
-                                <button class="btn btn-warning" onclick="resetUserSales('${escapeHTML(u.id)}')">Remettre à 0</button>
-                                <button class="btn btn-danger" onclick="removeUser('${escapeHTML(u.id)}')">Supprimer</button>
-                            </div>
-                        </td>
-                    `;
-                    usersList.appendChild(tr);
+                    const avatarUrl = u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    usersList.innerHTML += `
+                        <tr>
+                            <td><div class="user-cell"><img class="mini-avatar" src="${escapeHTML(avatarUrl)}"><span>${escapeHTML(u.username)}</span></div></td>
+                            <td class="right">${u.totalSales.toLocaleString()} septims</td>
+                            <td class="right">
+                                <div class="btn-group">
+                                    <button class="btn btn-warning" onclick="resetUserSales('${u.id}')">RAZ</button>
+                                    <button class="btn btn-danger" onclick="removeUser('${u.id}')">X</button>
+                                </div>
+                            </td>
+                        </tr>`;
                 });
 
                 const historyList = document.getElementById('sales-history-list');
-                historyList.innerHTML = '';
-                if (data.salesHistory.length === 0) {
-                    historyList.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #64748b;">Aucune vente enregistrée.</td></tr>`;
-                } else {
-                    data.salesHistory.forEach(sale => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${escapeHTML(sale.seller)}</td>
-                            <td>${escapeHTML(sale.item)}</td>
-                            <td class="right" style="color: #ffd700;">${sale.price.toLocaleString()} septims</td>
-                        `;
-                        historyList.appendChild(tr);
-                    });
-                }
-
+                historyList.innerHTML = data.salesHistory.length === 0 
+                    ? `<tr><td colspan="3" style="text-align: center; color: #64748b;">Aucune vente.</td></tr>` 
+                    : data.salesHistory.map(s => `<tr><td>${escapeHTML(s.seller)}</td><td>${escapeHTML(s.item)}</td><td class="right" style="color: #ffd700;">${s.price.toLocaleString()} septims</td></tr>`).join('');
             } else {
                 adminCard.style.display = 'none';
                 adminEmpInputs.style.display = 'none';
@@ -668,33 +651,27 @@
             if (!data.employees) data.employees = [];
 
             data.employees.forEach(emp => {
-                const tr = document.createElement('tr');
-                
-                let adminActions = '';
-                if (isAdmin) {
-                    adminActions = `
-                        <button class="btn btn-warning" onclick="editEmployeeSalary(${emp.id})">Modifier Paye</button>
-                        <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
-                    `;
-                }
-
-                tr.innerHTML = `
-                    <td><strong>${escapeHTML(emp.name)}</strong></td>
-                    <td>${escapeHTML(emp.role)}</td>
-                    <td class="right">${emp.salary} septims</td>
-                    <td class="right">
-                        <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
-                        ${adminActions}
-                    </td>
-                `;
-                empList.appendChild(tr);
+                let adminActions = isAdmin ? `
+                    <button class="btn btn-warning" onclick="editEmployeeSalary(${emp.id})">Modifier</button>
+                    <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
+                ` : '';
+                empList.innerHTML += `
+                    <tr>
+                        <td><strong>${escapeHTML(emp.name)}</strong></td>
+                        <td>${escapeHTML(emp.role)}</td>
+                        <td class="right">${emp.salary} septims</td>
+                        <td class="right">
+                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
+                            ${adminActions}
+                        </td>
+                    </tr>`;
             });
         }
 
         function modifyGold(direction) {
             const qty = Math.max(0, parseInt(document.getElementById('gold-qty').value) || 0);
             data.gold = Math.max(0, data.gold + (qty * direction));
-            saveAndRender();
+            saveData().then(() => render());
         }
 
         function modifyGem(direction) {
@@ -702,13 +679,12 @@
             const qty = Math.max(0, parseInt(document.getElementById('gem-qty').value) || 0);
             if (data.gems[name] !== undefined) {
                 data.gems[name].qty = Math.max(0, data.gems[name].qty + (qty * direction));
-                saveAndRender();
+                saveData().then(() => render());
             }
         }
 
         function addEmployee() {
             if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
-
             const name = document.getElementById('emp-name').value.trim();
             const role = document.getElementById('emp-role').value.trim() || 'Employé';
             const salary = Math.max(0, parseInt(document.getElementById('emp-salary').value) || 0);
@@ -718,30 +694,26 @@
                 document.getElementById('emp-name').value = '';
                 document.getElementById('emp-role').value = '';
                 document.getElementById('emp-salary').value = '';
-                saveAndRender();
+                saveData().then(() => render());
             }
         }
 
         function removeEmployee(id) {
             if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
             data.employees = data.employees.filter(emp => emp.id !== id);
-            saveAndRender();
+            saveData().then(() => render());
         }
 
         function editEmployeeSalary(id) {
             if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
-
             const emp = data.employees.find(e => e.id === id);
             if (!emp) return;
-
-            const newSalary = prompt(`Modifier le salaire de ${emp.name} (en septims) :`, emp.salary);
+            const newSalary = prompt(`Nouveau salaire pour ${emp.name} :`, emp.salary);
             if (newSalary !== null) {
                 const parsed = parseInt(newSalary);
                 if (!isNaN(parsed) && parsed >= 0) {
                     emp.salary = parsed;
-                    saveAndRender();
-                } else {
-                    alert("Valeur invalide.");
+                    saveData().then(() => render());
                 }
             }
         }
@@ -749,14 +721,18 @@
         function payEmployee(id, salary) {
             if (data.gold >= salary) {
                 data.gold -= salary;
-                saveAndRender();
+                saveData().then(() => render());
             } else {
-                alert("Pas assez d'or en caisse pour verser le salaire !");
+                alert("Pas assez d'or en caisse !");
             }
         }
 
+        // Lancement
         handleDiscordAuth();
-        saveAndRender();
+        loadData();
+
+        // Actualisation automatique toutes les 5 secondes
+        setInterval(loadData, 5000);
     </script>
 </body>
 </html>
