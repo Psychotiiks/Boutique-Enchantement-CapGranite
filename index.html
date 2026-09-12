@@ -215,6 +215,30 @@
             gap: 4px;
             justify-content: flex-end;
         }
+        .scrollable-table-container {
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding-right: 5px;
+        }
+        .scrollable-table-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollable-table-container::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        .scrollable-table-container::-webkit-scrollbar-thumb {
+            background: rgba(135, 206, 235, 0.3);
+            border-radius: 3px;
+        }
+        .scrollable-table-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(135, 206, 235, 0.6);
+        }
+        .admin-section-divider {
+            margin-top: 25px;
+            border-top: 1px dashed rgba(135, 206, 235, 0.2);
+            padding-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -287,7 +311,9 @@
 
     <!-- Carte Administrateur -->
     <div class="card" id="admin-users-card" style="display: none;">
-        <h2>Membres Connectés & Ventes (Admin)</h2>
+        <h2>Panel Administrateur</h2>
+        
+        <h3 style="color: #94a3b8; font-size: 1.05rem; margin-top: 10px;">Membres Connectés & Ventes Globales</h3>
         <table>
             <thead>
                 <tr>
@@ -298,11 +324,29 @@
             </thead>
             <tbody id="users-list"></tbody>
         </table>
+
+        <div class="admin-section-divider">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Historique des Ventes</h3>
+                <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearSalesHistory()">Vider l'historique</button>
+            </div>
+            <div class="scrollable-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vendeur</th>
+                            <th>Item Enchanté</th>
+                            <th class="right">Prix</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-history-list"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div class="card">
         <h2>Gestion des Employés RP</h2>
-        <!-- Formulaire de recrutement visible uniquement pour l'admin -->
         <div class="action-inputs" id="admin-employee-inputs" style="display: none;">
             <input type="text" id="emp-name" placeholder="Nom du registre / RP">
             <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
@@ -329,18 +373,21 @@
         const defaultData = {
             gold: 1250,
             gems: {
-                "Gemme Spirituelle Vide": { qty: 0, price: 7 },
-                "Gemme Spirituelle Pleine": { qty: 0, price: 15 }
+                "Gemme Spirituelle Vide": { qty: 20, price: 50 },
+                "Gemme Spirituelle Pleine": { qty: 10, price: 150 }
             },
             employees: [
+                { id: 1, name: "Farengar", role: "Mage de cour", salary: 150 }
             ],
-            users: {}
+            users: {},
+            salesHistory: []
         };
 
         let data;
         try {
-            const stored = localStorage.getItem('skyrim_gems_data_v3');
+            const stored = localStorage.getItem('skyrim_gems_data_v4');
             data = stored ? JSON.parse(stored) : defaultData;
+            if (!data.salesHistory) data.salesHistory = [];
         } catch (e) {
             console.error("Erreur de lecture du localStorage :", e);
             data = defaultData;
@@ -457,6 +504,7 @@
         function submitSale() {
             if (!currentUser) return;
 
+            const description = document.getElementById('sale-description').value.trim() || 'Item enchanté';
             const amount = Math.max(0, parseInt(document.getElementById('sale-amount').value) || 0);
 
             if (amount > 0) {
@@ -464,6 +512,13 @@
                 if (data.users[currentUser.id]) {
                     data.users[currentUser.id].totalSales += amount;
                 }
+
+                // Ajout à l'historique (les ventes récentes en haut)
+                data.salesHistory.unshift({
+                    seller: currentUser.username,
+                    item: description,
+                    price: amount
+                });
                 
                 document.getElementById('sale-description').value = '';
                 document.getElementById('sale-amount').value = '';
@@ -495,8 +550,16 @@
             }
         }
 
+        function clearSalesHistory() {
+            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            if (confirm("Voulez-vous vraiment vider tout l'historique des ventes ?")) {
+                data.salesHistory = [];
+                saveAndRender();
+            }
+        }
+
         function saveAndRender() {
-            localStorage.setItem('skyrim_gems_data_v3', JSON.stringify(data));
+            localStorage.setItem('skyrim_gems_data_v4', JSON.stringify(data));
             document.getElementById('gold-balance').innerText = data.gold.toLocaleString();
 
             const list = document.getElementById('inventory-list');
@@ -525,6 +588,8 @@
             if (isAdmin) {
                 adminCard.style.display = 'block';
                 adminEmpInputs.style.display = 'flex';
+                
+                // Rendu des utilisateurs
                 const usersList = document.getElementById('users-list');
                 usersList.innerHTML = '';
 
@@ -551,6 +616,24 @@
                     `;
                     usersList.appendChild(tr);
                 });
+
+                // Rendu de l'historique des ventes
+                const historyList = document.getElementById('sales-history-list');
+                historyList.innerHTML = '';
+                if (data.salesHistory.length === 0) {
+                    historyList.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #64748b;">Aucune vente enregistrée.</td></tr>`;
+                } else {
+                    data.salesHistory.forEach(sale => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHTML(sale.seller)}</td>
+                            <td>${escapeHTML(sale.item)}</td>
+                            <td class="right" style="color: #ffd700;">${sale.price.toLocaleString()} septims</td>
+                        `;
+                        historyList.appendChild(tr);
+                    });
+                }
+
             } else {
                 adminCard.style.display = 'none';
                 adminEmpInputs.style.display = 'none';
@@ -563,7 +646,6 @@
             data.employees.forEach(emp => {
                 const tr = document.createElement('tr');
                 
-                // Bouton de modification de la paye uniquement pour l'admin
                 let adminActions = '';
                 if (isAdmin) {
                     adminActions = `
