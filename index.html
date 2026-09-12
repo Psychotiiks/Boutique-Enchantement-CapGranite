@@ -258,12 +258,8 @@
         <h2>Stock de Gemmes Spirituelles</h2>
         <div class="action-inputs">
             <select id="gem-select">
-                <option value="Gemme Spirituelle (Insignifiante)">Gemme Spirituelle (Insignifiante)</option>
-                <option value="Gemme Spirituelle (Inferieure)">Gemme Spirituelle (Inférieure)</option>
-                <option value="Gemme Spirituelle (Moyenne)">Gemme Spirituelle (Moyenne)</option>
-                <option value="Gemme Spirituelle (Grande)">Gemme Spirituelle (Grande)</option>
-                <option value="Gemme Spirituelle (Sublime)">Gemme Spirituelle (Sublime)</option>
-                <option value="Gemme Noire">Gemme Noire</option>
+                <option value="Gemme Spirituelle (Vide)">Gemme Spirituelle (Vide)</option>
+                <option value="Gemme Spirituelle (Pleine)">Gemme Spirituelle (Pleine)</option>
             </select>
             <input type="number" id="gem-qty" value="1" min="1">
             <button class="btn" onclick="modifyGem(1)">Déposer</button>
@@ -324,12 +320,8 @@
         let data = JSON.parse(localStorage.getItem('skyrim_gems_data_v2')) || {
             gold: 1250,
             gems: {
-                "Gemme Spirituelle (Insignifiante)": { qty: 15, price: 25 },
-                "Gemme Spirituelle (Inferieure)": { qty: 10, price: 50 },
-                "Gemme Spirituelle (Moyenne)": { qty: 8, price: 100 },
-                "Gemme Spirituelle (Grande)": { qty: 5, price: 200 },
-                "Gemme Spirituelle (Sublime)": { qty: 2, price: 500 },
-                "Gemme Noire": { qty: 1, price: 750 }
+                "Gemme Spirituelle (Vide)": { qty: 0, price: 7 },
+                "Gemme Spirituelle (Pleine)": { qty: 0, price: 15 },
             },
             employees: [
                 { id: 1, name: "Farengar", role: "Mage de cour", salary: 150 }
