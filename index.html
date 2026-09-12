@@ -216,7 +216,7 @@
             justify-content: flex-end;
         }
         .scrollable-table-container {
-            max-height: 220px;
+            max-height: 200px;
             overflow-y: auto;
             margin-top: 10px;
             padding-right: 5px;
@@ -241,6 +241,33 @@
             color: #64748b;
             text-align: center;
             margin-bottom: 15px;
+        }
+
+        /* Notifications Toast */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #87ceeb;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-size: 0.9rem;
+            animation: fadeInOut 4s ease forwards;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
         }
     </style>
 </head>
@@ -274,10 +301,18 @@
     <div class="card" id="user-sales-card" style="display: none;">
         <h2>Enregistrer une Vente</h2>
         <div class="action-inputs">
-            <input type="text" id="sale-description" placeholder="Description (ex: Épée enchantée)">
-            <input type="number" id="sale-amount" placeholder="Montant (septims)" min="1">
+            <select id="item-category">
+                <option value="Arme">⚔️ Arme Enchantée</option>
+                <option value="Armure">🛡️ Armure Enchantée</option>
+                <option value="Bijou">💍 Bijou Enchanté</option>
+            </select>
+            <input type="text" id="sale-description" placeholder="Nom/Description (ex: Épée de feu)">
+            <input type="number" id="sale-amount" placeholder="Prix de vente (septims)" min="1">
             <button class="btn" onclick="submitSale()">Valider la Vente</button>
         </div>
+        <p style="font-size: 0.8rem; color: #94a3b8; text-align: center; margin: 5px 0 0 0;">
+            * Une commission de 20% est versée au vendeur, le reste va dans l'or de la boutique.
+        </p>
     </div>
 
     <div class="card">
@@ -344,18 +379,36 @@
         <div class="admin-section-divider">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Historique des Ventes</h3>
-                <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearSalesHistory()">Vider l'historique</button>
+                <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearHistory('salesHistory')">Vider</button>
             </div>
             <div class="scrollable-table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Vendeur</th>
-                            <th>Item Enchanté</th>
+                            <th>Type & Item</th>
                             <th class="right">Prix</th>
                         </tr>
                     </thead>
                     <tbody id="sales-history-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-section-divider">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="color: #94a3b8; font-size: 1.05rem; margin: 0;">Journal d'Audit (Actions Globales)</h3>
+                <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.85rem;" onclick="clearHistory('auditLogs')">Vider l'audit</button>
+            </div>
+            <div class="scrollable-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Auteur</th>
+                            <th>Action Réalisée</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-list"></tbody>
                 </table>
             </div>
         </div>
@@ -382,11 +435,14 @@
         </table>
     </div>
 
+    <div id="toast-container"></div>
+
     <script>
         const DISCORD_CLIENT_ID = '1548137913416679495';
-        const ADMIN_DISCORD_ID = '232537879207739394';
+        
+        // Liste des administrateurs (Vous pouvez en ajouter d'autres en séparant par des virgules)
+        const ADMIN_DISCORD_IDS = ['232537879207739394'];
 
-        // IDENTIFIANTS CLOUD INTÉGRÉS
         const JSONBIN_BIN_ID = '6aa4e254ac6210605ac36471';
         const JSONBIN_API_KEY = '$2a$10$A6xORNqdqhQ3gC8.y3Ub3.h9Ko95w.5wJEgbcWNDTDMMt6vO5xyp2';
 
@@ -400,11 +456,26 @@
                 { id: 1, name: "Farengar", role: "Mage de cour", salary: 150 }
             ],
             users: {},
-            salesHistory: []
+            salesHistory: [],
+            auditLogs: []
         };
 
         let data = defaultData;
         let currentUser = null;
+        let lastChecksum = "";
+
+        function isAdmin() {
+            return currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id);
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
 
         function escapeHTML(str) {
             return String(str || '')
@@ -423,8 +494,18 @@
                 });
                 if (!response.ok) throw new Error('Erreur réseau Cloud');
                 const result = await response.json();
-                data = result.record;
-                if (!data.salesHistory) data.salesHistory = [];
+                const newData = result.record;
+                if (!newData.salesHistory) newData.salesHistory = [];
+                if (!newData.auditLogs) newData.auditLogs = [];
+
+                // Vérifier si des données ont changé par rapport à l'affichage actuel
+                const newChecksum = JSON.stringify(newData);
+                if (lastChecksum && lastChecksum !== newChecksum) {
+                    showToast("⚡ Mise à jour détectée en direct !");
+                }
+                lastChecksum = newChecksum;
+                data = newData;
+
                 statusEl.innerText = "Synchronisé en direct avec le Cloud ✨";
                 statusEl.style.color = "#4ade80";
             } catch (e) {
@@ -435,7 +516,19 @@
             render();
         }
 
-        async function saveData() {
+        async function saveData(auditMessage = null) {
+            if (currentUser && auditMessage) {
+                data.auditLogs.unshift({
+                    author: currentUser.username,
+                    action: auditMessage,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+                if (data.auditLogs.length > 50) data.auditLogs.pop(); // Garder max 50 logs
+            }
+
+            lastChecksum = JSON.stringify(data);
+            render();
+
             try {
                 await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
                     method: 'PUT',
@@ -451,10 +544,6 @@
         }
 
         function loginWithDiscord() {
-            if (!DISCORD_CLIENT_ID) {
-                alert("Erreur : Le CLIENT_ID Discord n'est pas renseigné.");
-                return;
-            }
             const redirectUri = encodeURIComponent(window.location.href.split('?')[0].split('#')[0]);
             const discordUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify`;
             window.location.href = discordUrl;
@@ -469,10 +558,7 @@
                 fetch('https://discord.com/api/users/@me', {
                     headers: { authorization: `Bearer ${accessToken}` }
                 })
-                .then(res => {
-                    if (!res.ok) throw new Error('Échec de la requête OAuth');
-                    return res.json();
-                })
+                .then(res => res.json())
                 .then(user => {
                     if (user.id) {
                         localStorage.setItem('discord_user', JSON.stringify(user));
@@ -480,10 +566,7 @@
                         registerUser(user);
                     }
                 })
-                .catch(err => {
-                    console.error("Erreur d'authentification Discord :", err);
-                    renderAuth(null);
-                });
+                .catch(err => renderAuth(null));
             } else {
                 try {
                     const savedUser = JSON.parse(localStorage.getItem('discord_user'));
@@ -504,7 +587,7 @@
                 data.users[user.id].avatar = user.avatar;
             }
             renderAuth(user);
-            saveData().then(() => render());
+            saveData();
         }
 
         function renderAuth(user) {
@@ -536,56 +619,60 @@
 
         function submitSale() {
             if (!currentUser) return;
-            const description = document.getElementById('sale-description').value.trim() || 'Item enchanté';
+            const category = document.getElementById('item-category').value;
+            const description = document.getElementById('sale-description').value.trim() || 'Objet enchanté';
             const amount = Math.max(0, parseInt(document.getElementById('sale-amount').value) || 0);
 
             if (amount > 0) {
-                data.gold += amount;
+                const shopPart = Math.round(amount * 0.8);
+                const sellerPart = amount - shopPart;
+
+                data.gold += shopPart;
                 if (data.users[currentUser.id]) {
                     data.users[currentUser.id].totalSales += amount;
                 }
-                data.salesHistory.unshift({ seller: currentUser.username, item: description, price: amount });
+                data.salesHistory.unshift({ seller: currentUser.username, item: `[${category}] ${description}`, price: amount });
                 
                 document.getElementById('sale-description').value = '';
                 document.getElementById('sale-amount').value = '';
                 
-                saveData().then(() => render());
+                saveData(`A enregistré une vente : ${category} "${description}" pour ${amount} septims`);
             }
         }
 
         function resetUserSales(userId) {
-            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            if (!isAdmin()) return;
             if (data.users[userId] && confirm(`Remettre à 0 les ventes de ${data.users[userId].username} ?`)) {
                 data.users[userId].totalSales = 0;
-                saveData().then(() => render());
+                saveData(`A réinitialisé le compteur de ventes de ${data.users[userId].username}`);
             }
         }
 
         function removeUser(userId) {
-            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            if (!isAdmin()) return;
             if (confirm("Supprimer cet utilisateur ?")) {
                 delete data.users[userId];
-                saveData().then(() => render());
+                saveData("A supprimé un utilisateur de la liste");
             }
         }
 
-        function clearSalesHistory() {
-            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
-            if (confirm("Voulez-vous vider l'historique ?")) {
-                data.salesHistory = [];
-                saveData().then(() => render());
+        function clearHistory(type) {
+            if (!isAdmin()) return;
+            if (confirm("Voulez-vous vider cet historique ?")) {
+                data[type] = [];
+                saveData(`A vidé l'historique : ${type}`);
             }
         }
 
         function updateGemPrice() {
-            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            if (!isAdmin()) return;
             const gemName = document.getElementById('admin-gem-select').value;
             const newPrice = parseInt(document.getElementById('admin-gem-new-price').value);
 
             if (!isNaN(newPrice) && newPrice >= 0 && data.gems[gemName]) {
                 data.gems[gemName].price = newPrice;
                 document.getElementById('admin-gem-new-price').value = '';
-                saveData().then(() => render());
+                saveData(`A modifié le prix de "${gemName}" à ${newPrice} septims`);
             } else {
                 alert("Prix invalide.");
             }
@@ -614,9 +701,9 @@
 
             const adminCard = document.getElementById('admin-users-card');
             const adminEmpInputs = document.getElementById('admin-employee-inputs');
-            const isAdmin = currentUser && currentUser.id === ADMIN_DISCORD_ID;
+            const userIsAdmin = isAdmin();
 
-            if (isAdmin) {
+            if (userIsAdmin) {
                 adminCard.style.display = 'block';
                 adminEmpInputs.style.display = 'flex';
                 
@@ -641,6 +728,11 @@
                 historyList.innerHTML = data.salesHistory.length === 0 
                     ? `<tr><td colspan="3" style="text-align: center; color: #64748b;">Aucune vente.</td></tr>` 
                     : data.salesHistory.map(s => `<tr><td>${escapeHTML(s.seller)}</td><td>${escapeHTML(s.item)}</td><td class="right" style="color: #ffd700;">${s.price.toLocaleString()} septims</td></tr>`).join('');
+
+                const auditList = document.getElementById('audit-list');
+                auditList.innerHTML = data.auditLogs.length === 0 
+                    ? `<tr><td colspan="2" style="text-align: center; color: #64748b;">Aucune action enregistrée.</td></tr>` 
+                    : data.auditLogs.map(a => `<tr><td><strong>${escapeHTML(a.author)}</strong> <span style="color: #64748b; font-size: 0.8em;">[${a.time}]</span></td><td>${escapeHTML(a.action)}</td></tr>`).join('');
             } else {
                 adminCard.style.display = 'none';
                 adminEmpInputs.style.display = 'none';
@@ -651,7 +743,7 @@
             if (!data.employees) data.employees = [];
 
             data.employees.forEach(emp => {
-                let adminActions = isAdmin ? `
+                let adminActions = userIsAdmin ? `
                     <button class="btn btn-warning" onclick="editEmployeeSalary(${emp.id})">Modifier</button>
                     <button class="btn btn-danger" onclick="removeEmployee(${emp.id})">Renvoyer</button>
                 ` : '';
@@ -661,7 +753,7 @@
                         <td>${escapeHTML(emp.role)}</td>
                         <td class="right">${emp.salary} septims</td>
                         <td class="right">
-                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary})">Payer</button>
+                            <button class="btn" onclick="payEmployee(${emp.id}, ${emp.salary}, '${emp.name}')">Payer</button>
                             ${adminActions}
                         </td>
                     </tr>`;
@@ -670,21 +762,25 @@
 
         function modifyGold(direction) {
             const qty = Math.max(0, parseInt(document.getElementById('gold-qty').value) || 0);
-            data.gold = Math.max(0, data.gold + (qty * direction));
-            saveData().then(() => render());
+            if (qty > 0) {
+                data.gold = Math.max(0, data.gold + (qty * direction));
+                const actionText = direction > 0 ? `A ajouté ${qty} septims en caisse` : `A retiré ${qty} septims de la caisse`;
+                saveData(actionText);
+            }
         }
 
         function modifyGem(direction) {
             const name = document.getElementById('gem-select').value;
             const qty = Math.max(0, parseInt(document.getElementById('gem-qty').value) || 0);
-            if (data.gems[name] !== undefined) {
+            if (qty > 0 && data.gems[name] !== undefined) {
                 data.gems[name].qty = Math.max(0, data.gems[name].qty + (qty * direction));
-                saveData().then(() => render());
+                const actionText = direction > 0 ? `A déposé ${qty}x ${name}` : `A retiré/vendu ${qty}x ${name}`;
+                saveData(actionText);
             }
         }
 
         function addEmployee() {
-            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            if (!isAdmin()) return;
             const name = document.getElementById('emp-name').value.trim();
             const role = document.getElementById('emp-role').value.trim() || 'Employé';
             const salary = Math.max(0, parseInt(document.getElementById('emp-salary').value) || 0);
@@ -694,18 +790,19 @@
                 document.getElementById('emp-name').value = '';
                 document.getElementById('emp-role').value = '';
                 document.getElementById('emp-salary').value = '';
-                saveData().then(() => render());
+                saveData(`A recruté l'employé ${name} (${role})`);
             }
         }
 
         function removeEmployee(id) {
-            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            if (!isAdmin()) return;
+            const emp = data.employees.find(e => e.id === id);
             data.employees = data.employees.filter(emp => emp.id !== id);
-            saveData().then(() => render());
+            saveData(`A renvoyé l'employé ${emp ? emp.name : ''}`);
         }
 
         function editEmployeeSalary(id) {
-            if (!currentUser || currentUser.id !== ADMIN_DISCORD_ID) return;
+            if (!isAdmin()) return;
             const emp = data.employees.find(e => e.id === id);
             if (!emp) return;
             const newSalary = prompt(`Nouveau salaire pour ${emp.name} :`, emp.salary);
@@ -713,15 +810,15 @@
                 const parsed = parseInt(newSalary);
                 if (!isNaN(parsed) && parsed >= 0) {
                     emp.salary = parsed;
-                    saveData().then(() => render());
+                    saveData(`A modifié le salaire de ${emp.name} à ${parsed} septims`);
                 }
             }
         }
 
-        function payEmployee(id, salary) {
+        function payEmployee(id, salary, empName) {
             if (data.gold >= salary) {
                 data.gold -= salary;
-                saveData().then(() => render());
+                saveData(`A payé le salaire de ${empName} (${salary} septims)`);
             } else {
                 alert("Pas assez d'or en caisse !");
             }
