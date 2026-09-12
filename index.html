@@ -370,7 +370,7 @@
                 alert("Erreur : Le CLIENT_ID Discord n'est pas renseigné.");
                 return;
             }
-            const redirectUri = encodeURIComponent('https://psychotiiks.github.io/Boutique-alchimie-CapGranite/');
+            const redirectUri = encodeURIComponent('https://psychotiiks.github.io/Boutique-Enchantement-CapGranite/');
             const discordUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify`;
             window.location.href = discordUrl;
         }
