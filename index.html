@@ -293,7 +293,6 @@
         </div>
     </div>
 
-    <!-- CARTE VENTE RÉINTÉGRÉE -->
     <div class="card" id="user-sales-card" style="display: none;">
         <h2>Enregistrer une Vente</h2>
         <div class="action-inputs">
@@ -307,7 +306,7 @@
             <button class="btn" onclick="submitSale()">Valider la Vente</button>
         </div>
         <p style="font-size: 0.8rem; color: #94a3b8; text-align: center; margin: 5px 0 0 0;">
-            * Une commission de 20% est versée au vendeur, le reste va dans l'or de la boutique.
+            * Une commission de 5% est versée au vendeur (ajoutée directement à son salaire), le reste va dans l'or de la boutique.
         </p>
     </div>
 
@@ -415,7 +414,7 @@
             <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
                 <input type="text" id="emp-name" placeholder="Nom du personnage RP">
                 <input type="text" id="emp-role" placeholder="Rôle (ex: Enchanteur)">
-                <input type="number" id="emp-salary" placeholder="Salaire (septims)" min="0">
+                <input type="number" id="emp-salary" placeholder="Salaire de base (septims)" min="0">
             </div>
             <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center; width: 100%;">
                 <select id="emp-discord-select" style="max-width: 300px; flex: 1;">
@@ -429,7 +428,7 @@
                 <tr>
                     <th>Employé / Joueur</th>
                     <th>Rôle</th>
-                    <th class="right">Salaire</th>
+                    <th class="right">Salaire (Base + Com 5%)</th>
                     <th class="right" id="th-actions-header" style="display: none;">Actions</th>
                 </tr>
             </thead>
@@ -647,18 +646,31 @@
             const amount = Math.max(0, parseInt(document.getElementById('sale-amount').value) || 0);
 
             if (amount > 0) {
-                const shopPart = Math.round(amount * 0.8);
+                // 95% pour la boutique, 5% de commission pour le vendeur
+                const shopPart = Math.round(amount * 0.95);
+                const commission = amount - shopPart;
+
                 data.gold += shopPart;
+
                 if (!data.users[currentUser.id]) {
                     data.users[currentUser.id] = { id: currentUser.id, username: currentUser.username, avatar: currentUser.avatar, totalSales: 0 };
                 }
                 data.users[currentUser.id].totalSales += amount;
+
+                // Chercher si l'utilisateur est lié à un employé pour ajouter la commission directement à son salaire
+                if (data.employees) {
+                    const emp = data.employees.find(e => e.discordId === currentUser.id);
+                    if (emp) {
+                        emp.salary = (emp.salary || 0) + commission;
+                    }
+                }
+
                 data.salesHistory.unshift({ seller: currentUser.username, item: `[${category}] ${description}`, price: amount });
                 
                 document.getElementById('sale-description').value = '';
                 document.getElementById('sale-amount').value = '';
                 
-                saveData(`A enregistré une vente : ${category} "${description}" pour ${amount} septims`);
+                saveData(`A enregistré une vente : ${category} "${description}" pour ${amount} septims (+${commission} septims de commission au salaire)`);
             }
         }
 
@@ -791,7 +803,7 @@
                     discordInfo = `
                         <div style="font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin-top: 4px;">
                             <img class="mini-avatar" src="${escapeHTML(avatarUrl)}" style="width: 16px; height: 16px;">
-                            <span>@${escapeHTML(u.username)}</span>
+                            <span>@${escapeHTML(u.username)} (Lié)</span>
                         </div>`;
                 }
 
@@ -812,7 +824,7 @@
                             ${discordInfo}
                         </td>
                         <td>${escapeHTML(emp.role)}</td>
-                        <td class="right">${emp.salary} septims</td>
+                        <td class="right" style="color: #4ade80;">${emp.salary} septims</td>
                         ${adminActionsCell}
                     </tr>`;
             });
@@ -871,7 +883,7 @@
             if (newName === null) return;
             const newRole = prompt(`Rôle pour ${emp.name} :`, emp.role);
             if (newRole === null) return;
-            const newSalary = prompt(`Salaire pour ${emp.name} :`, emp.salary);
+            const newSalary = prompt(`Salaire total actuel pour ${emp.name} :`, emp.salary);
             if (newSalary === null) return;
 
             const parsedSalary = parseInt(newSalary);
@@ -889,6 +901,7 @@
             if (!isAdmin()) return;
             if (data.gold >= salary) {
                 data.gold -= salary;
+                // Optionnel : tu peux remettre son salaire à 0 ou le laisser s'accumuler. Ici on retire l'or de la caisse.
                 saveData(`A payé le salaire de ${empName} (${salary} septims)`);
             } else {
                 alert("Pas assez d'or en caisse !");
