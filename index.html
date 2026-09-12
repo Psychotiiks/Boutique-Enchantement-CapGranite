@@ -469,6 +469,7 @@
         let data = defaultData;
         let currentUser = null;
         let lastChecksum = "";
+        let isSaving = false; // Bloque la synchro auto pendant une sauvegarde pour éviter les conflits
 
         function isAdmin() {
             return currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id);
@@ -493,6 +494,7 @@
         }
 
         async function loadData() {
+            if (isSaving) return; // Ne pas recharger pendant qu'on sauvegarde
             const statusEl = document.getElementById('sync-status');
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
@@ -501,28 +503,33 @@
                 if (!response.ok) throw new Error('Erreur réseau Cloud');
                 const result = await response.json();
                 const newData = result.record;
-                if (!newData.salesHistory) newData.salesHistory = [];
-                if (!newData.auditLogs) newData.auditLogs = [];
-                if (!newData.employees) newData.employees = [];
+                
+                if (newData && newData.gold !== undefined) {
+                    if (!newData.salesHistory) newData.salesHistory = [];
+                    if (!newData.auditLogs) newData.auditLogs = [];
+                    if (!newData.employees) newData.employees = [];
+                    if (!newData.gems) newData.gems = defaultData.gems;
 
-                const newChecksum = JSON.stringify(newData);
-                if (lastChecksum && lastChecksum !== newChecksum) {
-                    showToast("⚡ Mise à jour détectée en direct !");
+                    const newChecksum = JSON.stringify(newData);
+                    if (lastChecksum && lastChecksum !== newChecksum) {
+                        showToast("⚡ Mise à jour détectée en direct !");
+                    }
+                    lastChecksum = newChecksum;
+                    data = newData;
+
+                    statusEl.innerText = "Synchronisé en direct avec le Cloud ✨";
+                    statusEl.style.color = "#4ade80";
                 }
-                lastChecksum = newChecksum;
-                data = newData;
-
-                statusEl.innerText = "Synchronisé en direct avec le Cloud ✨";
-                statusEl.style.color = "#4ade80";
             } catch (e) {
                 console.error("Erreur de chargement Cloud :", e);
-                statusEl.innerText = "Erreur de synchronisation Cloud";
+                statusEl.innerText = "Mode local / Erreur Cloud";
                 statusEl.style.color = "#ef4444";
             }
             render();
         }
 
         async function saveData(auditMessage = null) {
+            isSaving = true;
             if (currentUser && auditMessage) {
                 data.auditLogs.unshift({
                     author: currentUser.username,
@@ -546,7 +553,9 @@
                 });
             } catch (e) {
                 console.error("Erreur lors de la sauvegarde cloud :", e);
+                showToast("❌ Erreur de sauvegarde Cloud !");
             }
+            isSaving = false;
         }
 
         function loginWithDiscord() {
@@ -586,6 +595,7 @@
 
         function registerUser(user) {
             currentUser = user;
+            if (!data.users) data.users = {};
             if (!data.users[user.id]) {
                 data.users[user.id] = { id: user.id, username: user.username, avatar: user.avatar, totalSales: 0 };
             } else {
@@ -632,9 +642,10 @@
             if (amount > 0) {
                 const shopPart = Math.round(amount * 0.8);
                 data.gold += shopPart;
-                if (data.users[currentUser.id]) {
-                    data.users[currentUser.id].totalSales += amount;
+                if (!data.users[currentUser.id]) {
+                    data.users[currentUser.id] = { id: currentUser.id, username: currentUser.username, avatar: currentUser.avatar, totalSales: 0 };
                 }
+                data.users[currentUser.id].totalSales += amount;
                 data.salesHistory.unshift({ seller: currentUser.username, item: `[${category}] ${description}`, price: amount });
                 
                 document.getElementById('sale-description').value = '';
@@ -683,23 +694,25 @@
         }
 
         function render() {
-            document.getElementById('gold-balance').innerText = data.gold.toLocaleString();
+            document.getElementById('gold-balance').innerText = (data.gold || 0).toLocaleString();
 
             const list = document.getElementById('inventory-list');
             list.innerHTML = '';
             let totalStockValue = 0;
 
-            for (const [name, info] of Object.entries(data.gems)) {
-                const totalValue = info.qty * info.price;
-                totalStockValue += totalValue;
-                list.innerHTML += `
-                    <tr>
-                        <td>${escapeHTML(name)}</td>
-                        <td class="right">${info.price} septims</td>
-                        <td class="right">${info.qty}</td>
-                        <td class="right">${totalValue.toLocaleString()} septims</td>
-                    </tr>
-                `;
+            if (data.gems) {
+                for (const [name, info] of Object.entries(data.gems)) {
+                    const totalValue = (info.qty || 0) * (info.price || 0);
+                    totalStockValue += totalValue;
+                    list.innerHTML += `
+                        <tr>
+                            <td>${escapeHTML(name)}</td>
+                            <td class="right">${info.price} septims</td>
+                            <td class="right">${info.qty}</td>
+                            <td class="right">${totalValue.toLocaleString()} septims</td>
+                        </tr>
+                    `;
+                }
             }
             document.getElementById('stock-value').innerText = totalStockValue.toLocaleString();
 
@@ -717,36 +730,40 @@
                 if (empDiscordSelect) {
                     const currentVal = empDiscordSelect.value;
                     empDiscordSelect.innerHTML = `<option value="">-- Lier à un compte Discord (Optionnel) --</option>`;
-                    Object.values(data.users).forEach(u => {
-                        empDiscordSelect.innerHTML += `<option value="${u.id}">${escapeHTML(u.username)}</option>`;
-                    });
+                    if (data.users) {
+                        Object.values(data.users).forEach(u => {
+                            empDiscordSelect.innerHTML += `<option value="${u.id}">${escapeHTML(u.username)}</option>`;
+                        });
+                    }
                     empDiscordSelect.value = currentVal;
                 }
 
                 const usersList = document.getElementById('users-list');
                 usersList.innerHTML = '';
-                Object.values(data.users).forEach(u => {
-                    const avatarUrl = u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
-                    usersList.innerHTML += `
-                        <tr>
-                            <td><div class="user-cell"><img class="mini-avatar" src="${escapeHTML(avatarUrl)}"><span>${escapeHTML(u.username)}</span></div></td>
-                            <td class="right">${u.totalSales.toLocaleString()} septims</td>
-                            <td class="right">
-                                <div class="btn-group">
-                                    <button class="btn btn-warning" onclick="resetUserSales('${u.id}')">RAZ</button>
-                                    <button class="btn btn-danger" onclick="removeUser('${u.id}')">X</button>
-                                </div>
-                            </td>
-                        </tr>`;
-                });
+                if (data.users) {
+                    Object.values(data.users).forEach(u => {
+                        const avatarUrl = u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                        usersList.innerHTML += `
+                            <tr>
+                                <td><div class="user-cell"><img class="mini-avatar" src="${escapeHTML(avatarUrl)}"><span>${escapeHTML(u.username)}</span></div></td>
+                                <td class="right">${(u.totalSales || 0).toLocaleString()} septims</td>
+                                <td class="right">
+                                    <div class="btn-group">
+                                        <button class="btn btn-warning" onclick="resetUserSales('${u.id}')">RAZ</button>
+                                        <button class="btn btn-danger" onclick="removeUser('${u.id}')">X</button>
+                                    </div>
+                                </td>
+                            </tr>`;
+                    });
+                }
 
                 const historyList = document.getElementById('sales-history-list');
-                historyList.innerHTML = data.salesHistory.length === 0 
+                historyList.innerHTML = (!data.salesHistory || data.salesHistory.length === 0) 
                     ? `<tr><td colspan="3" style="text-align: center; color: #64748b;">Aucune vente.</td></tr>` 
                     : data.salesHistory.map(s => `<tr><td>${escapeHTML(s.seller)}</td><td>${escapeHTML(s.item)}</td><td class="right" style="color: #ffd700;">${s.price.toLocaleString()} septims</td></tr>`).join('');
 
                 const auditList = document.getElementById('audit-list');
-                auditList.innerHTML = data.auditLogs.length === 0 
+                auditList.innerHTML = (!data.auditLogs || data.auditLogs.length === 0) 
                     ? `<tr><td colspan="2" style="text-align: center; color: #64748b;">Aucune action enregistrée.</td></tr>` 
                     : data.auditLogs.map(a => `<tr><td><strong>${escapeHTML(a.author)}</strong> <span style="color: #64748b; font-size: 0.8em;">[${a.time}]</span></td><td>${escapeHTML(a.action)}</td></tr>`).join('');
             } else {
@@ -761,7 +778,7 @@
 
             data.employees.forEach(emp => {
                 let discordInfo = '';
-                if (emp.discordId && data.users[emp.discordId]) {
+                if (emp.discordId && data.users && data.users[emp.discordId]) {
                     const u = data.users[emp.discordId];
                     const avatarUrl = u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
                     discordInfo = `
@@ -797,7 +814,7 @@
         function modifyGold(direction) {
             const qty = Math.max(0, parseInt(document.getElementById('gold-qty').value) || 0);
             if (qty > 0) {
-                data.gold = Math.max(0, data.gold + (qty * direction));
+                data.gold = Math.max(0, (data.gold || 0) + (qty * direction));
                 const actionText = direction > 0 ? `A ajouté ${qty} septims en caisse` : `A retiré ${qty} septims de la caisse`;
                 saveData(actionText);
             }
@@ -806,7 +823,7 @@
         function modifyGem(direction) {
             const name = document.getElementById('gem-select').value;
             const qty = Math.max(0, parseInt(document.getElementById('gem-qty').value) || 0);
-            if (qty > 0 && data.gems[name] !== undefined) {
+            if (qty > 0 && data.gems && data.gems[name] !== undefined) {
                 data.gems[name].qty = Math.max(0, data.gems[name].qty + (qty * direction));
                 const actionText = direction > 0 ? `A déposé ${qty}x ${name}` : `A retiré/vendu ${qty}x ${name}`;
                 saveData(actionText);
@@ -821,6 +838,7 @@
             const discordId = document.getElementById('emp-discord-select').value;
 
             if (name) {
+                if (!data.employees) data.employees = [];
                 data.employees.push({ id: Date.now(), name, role, salary, discordId: discordId || null });
                 document.getElementById('emp-name').value = '';
                 document.getElementById('emp-role').value = '';
@@ -874,7 +892,7 @@
         handleDiscordAuth();
         loadData();
 
-        // Actualisation automatique toutes les 5 secondes
+        // Actualisation automatique toutes les 5 secondes (bloquée pendant les sauvegardes)
         setInterval(loadData, 5000);
     </script>
 </body>
