@@ -20,7 +20,6 @@
             min-height: 100vh;
         }
 
-        /* Top Bar & Auth */
         .auth-bar {
             width: 100%;
             max-width: 750px;
@@ -60,7 +59,6 @@
         }
         .btn-discord:hover { background: #4752C4; }
 
-        /* Logo & Header */
         .header-logo {
             display: flex;
             flex-direction: column;
@@ -95,7 +93,6 @@
             text-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
 
-        /* Balance Boxes */
         .balance-container {
             display: flex;
             gap: 20px;
@@ -115,7 +112,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
 
-        /* Cards */
         .card {
             background: rgba(15, 23, 42, 0.8);
             border: 1px solid rgba(135, 206, 235, 0.2);
@@ -136,7 +132,6 @@
             text-align: center;
         }
 
-        /* Inputs & Buttons */
         .action-inputs {
             display: flex;
             gap: 10px;
@@ -191,7 +186,6 @@
             color: #fff;
         }
 
-        /* Table */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -291,8 +285,8 @@
         </table>
     </div>
 
-    <!-- Carte visible UNIQUEMENT par l'administrateur -->
-    <div class="card" id="232537879207739394" style="display: none;">
+    <!-- Carte Administrateur -->
+    <div class="card" id="admin-users-card" style="display: none;">
         <h2>Membres Connectés & Ventes (Admin)</h2>
         <table>
             <thead>
@@ -329,9 +323,7 @@
 
     <script>
         const DISCORD_CLIENT_ID = '1548137913416679495';
-        
-        // --- INSÉRER VOTRE ID DISCORD ICI ---
-        const ADMIN_DISCORD_ID = 'VOTRE_ID_DISCORD_ADMIN_ICI';
+        const ADMIN_DISCORD_ID = '232537879207739394'; // Ton ID Discord configuré ici
 
         const defaultData = {
             gold: 1250,
@@ -507,7 +499,6 @@
             localStorage.setItem('skyrim_gems_data_v3', JSON.stringify(data));
             document.getElementById('gold-balance').innerText = data.gold.toLocaleString();
 
-            // Stock Gemmes
             const list = document.getElementById('inventory-list');
             list.innerHTML = '';
             let totalStockValue = 0;
@@ -527,7 +518,6 @@
             }
             document.getElementById('stock-value').innerText = totalStockValue.toLocaleString();
 
-            // Gestion de l'affichage du bloc Admin
             const adminCard = document.getElementById('admin-users-card');
             const isAdmin = currentUser && currentUser.id === ADMIN_DISCORD_ID;
 
@@ -563,7 +553,6 @@
                 adminCard.style.display = 'none';
             }
 
-            // Employés RP
             const empList = document.getElementById('employee-list');
             empList.innerHTML = '';
             if (!data.employees) data.employees = [];
