@@ -105,7 +105,9 @@
             <!-- Gem Stock Table -->
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Stock de Gemmes Spirituelles</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                
+                <!-- Admin Only Gem Deposit/Withdraw Controls -->
+                <div id="admin-gem-controls" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 hidden">
                     <select id="gem-select" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-sky-500 outline-none">
                         <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
                         <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
@@ -116,6 +118,7 @@
                         <button class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold py-2 rounded-lg text-sm transition" onclick="modifyGem(-1)">Retirer</button>
                     </div>
                 </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead>
@@ -233,8 +236,9 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wide">Type d'objet :</label>
                         <select id="order-item-type" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-sky-500" onchange="updateOrderForm()">
-                            <option value="Armure">🛡️ Armure / Bijou (Enchantements de protection & stats)</option>
-                            <option value="Arme">⚔️ Arme (Enchantement offensif)</option>
+                            <option value="Armure">🛡️ Armure</option>
+                            <option value="Arme">⚔️ Arme</option>
+                            <option value="Bijou">💍 Bijou</option>
                         </select>
                     </div>
 
@@ -392,8 +396,10 @@
                 options.forEach(opt => {
                     enchSelect.innerHTML += `<option value="${escapeHTML(opt)}">${escapeHTML(opt)}</option>`;
                 });
-            } else {
-                enchSelect.innerHTML = `<option value="Enchantement d'arme (Feu/Glace/Foudre)">Enchantement d'arme (Feu/Glace/Foudre)</option>`;
+            } else if (itemType === 'Arme') {
+                enchSelect.innerHTML = `<option value="À définir plus tard (Arme)">À définir plus tard</option>`;
+            } else if (itemType === 'Bijou') {
+                enchSelect.innerHTML = `<option value="À définir plus tard (Bijou)">À définir plus tard</option>`;
             }
             calculateOrderPrice();
         }
@@ -560,7 +566,6 @@
         }
 
         function loginWithDiscord() {
-            // Robust redirect URI extraction supporting iframe previews & direct domain hosting
             let currentUrl = window.location.href.split('?')[0].split('#')[0];
             const redirectUri = encodeURIComponent(currentUrl);
             const authUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify`;
@@ -568,7 +573,6 @@
         }
 
         async function handleDiscordAuth() {
-            // Parse token from URL fragment (OAuth2 implicit grant)
             let accessToken = null;
             if (window.location.hash) {
                 const params = new URLSearchParams(window.location.hash.substring(1));
@@ -592,7 +596,6 @@
                 }
             }
 
-            // Fall back to saved local user session
             try {
                 const savedUser = JSON.parse(localStorage.getItem('discord_user'));
                 if (savedUser && savedUser.id) {
@@ -693,7 +696,7 @@
         }
 
         function modifyGem(multiplier) {
-            if (!currentUser) return;
+            if (!isAdmin()) return;
             const gemName = document.getElementById('gem-select').value;
             const qty = parseInt(document.getElementById('gem-qty').value) || 0;
 
@@ -785,6 +788,7 @@
             document.getElementById('admin-users-card').classList.toggle('hidden', !userIsAdmin);
             document.getElementById('admin-employee-inputs').classList.toggle('hidden', !userIsAdmin);
             document.getElementById('th-actions-header').classList.toggle('hidden', !userIsAdmin);
+            document.getElementById('admin-gem-controls').classList.toggle('hidden', !userIsAdmin);
 
             if (userIsAdmin) {
                 // Admin Orders List
