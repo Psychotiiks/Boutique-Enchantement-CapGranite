@@ -23,6 +23,7 @@
 </head>
 <body class="flex flex-col items-center p-4 md:p-8">
 
+    <!-- Login Overlay -->
     <div id="login-overlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center z-50 p-4 text-center">
         <div class="bg-slate-900/90 border border-sky-500/30 rounded-xl p-8 max-w-md w-full shadow-2xl">
             <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-sky-900/40 to-slate-800 border-2 border-sky-400 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-sky-500/20">
@@ -36,6 +37,7 @@
         </div>
     </div>
 
+    <!-- Main App Container -->
     <div id="app-container" class="hidden w-full max-w-4xl flex-col items-center">
         
         <!-- User Top Bar -->
@@ -59,6 +61,7 @@
             <button class="nav-tab px-5 py-2.5 rounded-lg font-semibold text-sm transition bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-white" onclick="switchTab('my-orders')">📦 Mes Commandes</button>
         </div>
 
+        <!-- Tab Shop & Management -->
         <div id="tab-shop" class="tab-content active w-full flex flex-col items-center gap-6">
             
             <!-- Balances -->
@@ -220,6 +223,7 @@
 
         </div>
 
+        <!-- Tab Order Form -->
         <div id="tab-order" class="tab-content hidden w-full flex flex-col items-center">
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-2">Formulaire de Commande d'Enchantement</h2>
@@ -254,11 +258,11 @@
                         
                         <div id="gem-inputs-container" class="hidden mt-3 grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs text-slate-400 mb-1">Gemmes Vides :</label>
+                                <label class="block text-xs text-slate-400 mb-1">Gemmes Vides (-10s/u) :</label>
                                 <input type="number" id="order-gems-empty" value="0" min="0" oninput="calculateOrderPrice()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
                             </div>
                             <div>
-                                <label class="block text-xs text-slate-400 mb-1">Gemmes Pleines :</label>
+                                <label class="block text-xs text-slate-400 mb-1">Gemmes Pleines (-10s/u) :</label>
                                 <input type="number" id="order-gems-full" value="0" min="0" oninput="calculateOrderPrice()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
                             </div>
                         </div>
@@ -276,6 +280,7 @@
             </div>
         </div>
 
+        <!-- Tab My Orders -->
         <div id="tab-my-orders" class="tab-content hidden w-full flex flex-col items-center">
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Suivi de Mes Commandes</h2>
@@ -301,7 +306,7 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script>
-        const DISCORD_CLIENT_ID = '1548137913416679495';
+        const DISCORD_CLIENT_ID = '1347660232491122709';
         const ADMIN_DISCORD_IDS = ['232537879207739394'];
 
         const JSONBIN_BIN_ID = '6aa4e254ac6210605ac36471';
@@ -388,7 +393,7 @@
                     enchSelect.innerHTML += `<option value="${escapeHTML(opt)}">${escapeHTML(opt)}</option>`;
                 });
             } else {
-                enchSelect.innerHTML = `<option value="Enchantement d'arme (À venir)">Enchantement d'arme (À définir plus tard)</option>`;
+                enchSelect.innerHTML = `<option value="Enchantement d'arme (Feu/Glace/Foudre)">Enchantement d'arme (Feu/Glace/Foudre)</option>`;
             }
             calculateOrderPrice();
         }
@@ -459,7 +464,6 @@
             await saveData(`A passé une commande : ${itemType} (${enchantment}) pour ${finalPrice} septims`);
             showToast("✨ Commande transmise à l'officine avec succès !");
             
-            // Switch to my orders tab to view it immediately
             document.querySelectorAll('.nav-tab')[2].click();
         }
 
@@ -556,14 +560,20 @@
         }
 
         function loginWithDiscord() {
-            const redirectUri = encodeURIComponent(window.location.href.split('?')[0].split('#')[0]);
-            window.location.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify`;
+            // Robust redirect URI extraction supporting iframe previews & direct domain hosting
+            let currentUrl = window.location.href.split('?')[0].split('#')[0];
+            const redirectUri = encodeURIComponent(currentUrl);
+            const authUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify`;
+            window.location.href = authUrl;
         }
 
         async function handleDiscordAuth() {
-            const hash = window.location.hash.substring(1);
-            const params = new URLSearchParams(hash);
-            const accessToken = params.get('access_token');
+            // Parse token from URL fragment (OAuth2 implicit grant)
+            let accessToken = null;
+            if (window.location.hash) {
+                const params = new URLSearchParams(window.location.hash.substring(1));
+                accessToken = params.get('access_token');
+            }
 
             if (accessToken) {
                 try {
@@ -575,23 +585,23 @@
                         localStorage.setItem('discord_user', JSON.stringify(user));
                         window.history.replaceState({}, document.title, window.location.pathname);
                         await grantAccess(user);
-                    } else {
-                        keepLocked();
+                        return;
                     }
-                } catch {
+                } catch (e) {
+                    console.error("Discord API error:", e);
+                }
+            }
+
+            // Fall back to saved local user session
+            try {
+                const savedUser = JSON.parse(localStorage.getItem('discord_user'));
+                if (savedUser && savedUser.id) {
+                    await grantAccess(savedUser);
+                } else {
                     keepLocked();
                 }
-            } else {
-                try {
-                    const savedUser = JSON.parse(localStorage.getItem('discord_user'));
-                    if (savedUser && savedUser.id) {
-                        await grantAccess(savedUser);
-                    } else {
-                        keepLocked();
-                    }
-                } catch {
-                    keepLocked();
-                }
+            } catch {
+                keepLocked();
             }
         }
 
@@ -792,7 +802,7 @@
                                     <img class="w-6 h-6 rounded-full object-cover border border-sky-500" src="${escapeHTML(avatarUrl)}">
                                     <div>
                                         <strong class="text-slate-200">${escapeHTML(o.username)}</strong>
-                                        <div class="text-[10px] text-sky-400 font-mono">MP Discord requis</div>
+                                        <div class="text-[10px] text-sky-400 font-mono">Client Officine</div>
                                     </div>
                                 </td>
                                 <td class="py-3">
@@ -920,3 +930,10 @@
                 showToast("Ventes réinitialisées.");
             }
         }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            handleDiscordAuth();
+        });
+    </script>
+</body>
+</html>
