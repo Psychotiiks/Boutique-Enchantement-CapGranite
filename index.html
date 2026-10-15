@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="fr"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enchantement & Alchimie Lourde-Lame - Skyrim RP</title>
+    <title>Officine Lourde-Lame - Skyrim RP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
@@ -28,7 +28,7 @@
             <h1 class="text-2xl font-bold tracking-wider mb-2 text-slate-100">Officine Lourde-Lame</h1>
             <p class="text-slate-400 text-sm mb-6">Authentifiez-vous avec votre compte Discord pour accéder au registre de l'officine.</p>
             <button onclick="loginWithDiscord()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-3 shadow-md">
-                <span>Connexion Discord</span>
+                <span>Connexion Discord (Grand Maître)</span>
             </button>
         </div>
     </div>
@@ -89,8 +89,8 @@
                 <p class="text-xs text-slate-500 text-center mt-3">Une commission de 5% est versée au vendeur, le reste alimente la caisse de l'officine.</p>
             </div>
 
-            <!-- Admin Gold Management (Admin Only) -->
-            <div id="admin-gold-card" class="bg-slate-900/80 backdrop-blur border border-amber-500/30 rounded-xl p-6 w-full shadow-xl hidden">
+            <!-- Admin Gold Management -->
+            <div id="admin-gold-card" class="bg-slate-900/80 backdrop-blur border border-amber-500/30 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-amber-300 border-b border-slate-800 pb-3 mb-4">Gestion de la Caisse Enchanterie (Admin)</h2>
                 <div class="flex gap-3 flex-wrap items-center">
                     <input type="number" id="gold-qty" value="100" min="1" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 w-32 outline-none">
@@ -103,7 +103,7 @@
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Stock de Gemmes Spirituelles</h2>
                 
-                <div id="admin-gem-controls" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 hidden">
+                <div id="admin-gem-controls" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                     <select id="gem-select" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-sky-500 outline-none">
                         <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
                         <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
@@ -130,8 +130,8 @@
                 </div>
             </div>
 
-            <!-- Admin Panel (Admin Only) -->
-            <div id="admin-users-card" class="bg-slate-900/80 backdrop-blur border border-sky-500/30 rounded-xl p-6 w-full shadow-xl hidden">
+            <!-- Admin Panel -->
+            <div id="admin-users-card" class="bg-slate-900/80 backdrop-blur border border-sky-500/30 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-sky-300 border-b border-slate-800 pb-3 mb-4">Panel Maître Enchanteur (Admin)</h2>
                 
                 <h3 class="text-sm font-semibold text-slate-300 mb-3">📦 Commandes Reçues</h3>
@@ -176,21 +176,21 @@
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Registre des Membres & Enchanteurs RP</h2>
                 
-                <div id="admin-employee-inputs" class="flex flex-col gap-3 mb-4 hidden">
+                <div id="admin-employee-inputs" class="flex flex-col gap-3 mb-4">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <input type="text" id="emp-name" placeholder="Nom du personnage RP" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
                         <select id="emp-role" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
-                       <option value="Grand Maître">👑 Grand Maître (Omnipotent / Admin)</option>
-                       <option value="Alchimiste">🧪 Alchimiste</option>
-                       <option value="Enchanteur">✨ Enchanteur</option>
-                       <option value="Guerrier">⚔️ Guerrier</option>
-                       <option value="Forgeron">🔨 Forgeron</option>
-                       <option value="Mineur">⛏️ Mineur</option>
-                       <option value="Cuisinier">🍳 Cuisinier</option>
-                       <option value="Chasseur">🏹 Chasseur</option>
-                       <option value="Couture">🧵 Couture</option>
-                       <option value="Menuisier">🪓 Menuisier</option>
-                       <option value="Visiteur">👤 Visiteur</option>
+                            <option value="Grand Maître">👑 Grand Maître (Omnipotent / Admin)</option>
+                            <option value="Alchimiste">🧪 Alchimiste</option>
+                            <option value="Enchanteur">✨ Enchanteur</option>
+                            <option value="Guerrier">⚔️ Guerrier</option>
+                            <option value="Forgeron">🔨 Forgeron</option>
+                            <option value="Mineur">⛏️ Mineur</option>
+                            <option value="Cuisinier">🍳 Cuisinier</option>
+                            <option value="Chasseur">🏹 Chasseur</option>
+                            <option value="Couture">🧵 Couture</option>
+                            <option value="Menuisier">🪓 Menuisier</option>
+                            <option value="Visiteur">👤 Visiteur</option>
                         </select>
                         <input type="number" id="emp-salary" placeholder="Rémunération RP" min="0" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
                     </div>
@@ -206,7 +206,7 @@
                                 <th class="pb-3 font-semibold">Nom du Membre</th>
                                 <th class="pb-3 font-semibold">Rôle RP</th>
                                 <th class="pb-3 font-semibold text-right">Rémunération</th>
-                                <th class="pb-3 font-semibold text-right admin-only-col hidden">Actions</th>
+                                <th class="pb-3 font-semibold text-right admin-only-col">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="employee-list" class="divide-y divide-slate-800/50"></tbody>
@@ -307,7 +307,7 @@
                 </div>
             </div>
 
-            <!-- Gestion Caisse Alchimiste (Admin / Alchimiste) -->
+            <!-- Gestion Caisse Alchimiste -->
             <div id="alchemy-gold-card" class="bg-slate-900/80 backdrop-blur border border-emerald-500/30 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-amber-300 border-b border-slate-800 pb-3 mb-4">💰 Gestion de la Caisse d'Alchimie</h2>
                 <div class="flex gap-3 flex-wrap items-center">
@@ -321,7 +321,7 @@
             <div class="bg-slate-900/80 backdrop-blur border border-emerald-500/30 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-emerald-300 border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
                     <span class="flex items-center gap-2"><span>⚗️</span> Atelier de Concoction de Potions</span>
-                    <button class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/30 font-sans" onclick="toggleRecipeEditor()">⚙️ Gérer / Créer des Recettes</button>
+                    <button class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/30" onclick="toggleRecipeEditor()">⚙️ Gérer / Créer des Recettes</button>
                 </h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
@@ -346,7 +346,7 @@
                     <div id="recipe-ingredients-list" class="flex flex-wrap gap-2 text-sm pt-1"></div>
                 </div>
 
-                <!-- Moditeur / Créateur de recettes (caché par défaut) -->
+                <!-- Moditeur / Créateur de recettes -->
                 <div id="recipe-editor-panel" class="hidden mt-6 pt-6 border-t border-slate-800">
                     <h3 class="text-sm font-bold text-emerald-300 mb-3">🛠️ Créer / Éditer une Recette & Son Prix en Septims</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -380,7 +380,7 @@
                 <h2 class="text-lg font-bold text-emerald-300 border-b border-slate-800 pb-3 mb-4">📜 Enregistrer une Vente Alchimique</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                     <select id="alchemy-sale-type" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none" onchange="autoFillAlchemySalePrice()">
-                        <!-- Dynamic Options from recipes & custom -->
+                        <!-- Dynamic Options -->
                     </select>
                     <input type="text" id="alchemy-sale-description" placeholder="Nom/Description (ex: Potion de Soin Majeure)" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
                     <input type="number" id="alchemy-sale-amount" placeholder="Prix (septims)" min="1" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
@@ -452,10 +452,11 @@
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Rôle RP :</label>
                     <select id="edit-emp-role" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
-                        <option value="Guerrier">⚔️ Guerrier</option>
-                        <option value="Forgeron">🔨 Forgeron</option>
+                        <option value="Grand Maître">👑 Grand Maître (Omnipotent / Admin)</option>
                         <option value="Alchimiste">🧪 Alchimiste</option>
                         <option value="Enchanteur">✨ Enchanteur</option>
+                        <option value="Guerrier">⚔️ Guerrier</option>
+                        <option value="Forgeron">🔨 Forgeron</option>
                         <option value="Mineur">⛏️ Mineur</option>
                         <option value="Cuisinier">🍳 Cuisinier</option>
                         <option value="Chasseur">🏹 Chasseur</option>
@@ -480,11 +481,7 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script>
-        const DISCORD_CLIENT_ID = '1553203594667237446';
         const ADMIN_DISCORD_IDS = ['232537879207739394'];
-
-        const JSONBIN_BIN_ID = '6aa4e254ac6210605ac36471';
-        const JSONBIN_API_KEY = '$2a$10$A6xORNqdqhQ3gC8.y3Ub3.h9Ko95w.5wJEgbcWNDTDMMt6vO5xyp2';
 
         const skyrimIngredientsList = [
             "Aile de papillon", "Aile de papillon bleu", "Aile de monarque orange", "Aile de mophine lunaire", 
@@ -536,8 +533,72 @@
         let data = defaultData;
         let currentUser = null;
 
-        function isAdmin() {
-            return currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id);
+        // AUTHENTIFICATION & ROLES
+        function loginWithDiscord() {
+            currentUser = { 
+                id: '232537879207739394',
+                username: 'Grand Maître (Admin)', 
+                role: 'Grand Maître' 
+            };
+
+            const overlay = document.getElementById('login-overlay');
+            const app = document.getElementById('app-container');
+
+            if (overlay) overlay.classList.add('hidden');
+            if (app) {
+                app.classList.remove('hidden');
+                app.classList.add('flex');
+            }
+
+            const authContainer = document.getElementById('auth-container');
+            if (authContainer) {
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-3 bg-slate-900/90 border border-amber-500/40 px-4 py-2 rounded-lg shadow-lg">
+                        <span class="text-xs text-amber-300 font-bold">👑 ${escapeHTML(currentUser.username)}</span>
+                        <button onclick="logout()" class="text-xs text-slate-400 hover:text-rose-400 font-medium transition">Déconnexion</button>
+                    </div>
+                `;
+            }
+
+            updateAdminVisibility();
+            renderGoldBalance();
+            renderGemInventory();
+            renderEmployees();
+            renderAlchemyUI();
+            showToast("Connexion réussie en tant que Grand Maître !");
+        }
+
+        function logout() {
+            currentUser = null;
+            const overlay = document.getElementById('login-overlay');
+            const app = document.getElementById('app-container');
+            if (overlay) overlay.classList.remove('hidden');
+            if (app) {
+                app.classList.add('hidden');
+                app.classList.remove('flex');
+            }
+        }
+
+        function isSuperAdmin() {
+            return currentUser && (ADMIN_DISCORD_IDS.includes(currentUser.id) || currentUser.role === 'Grand Maître');
+        }
+
+        function updateAdminVisibility() {
+            const superAdmin = isSuperAdmin();
+
+            const adminGoldCard = document.getElementById('admin-gold-card');
+            const adminGemControls = document.getElementById('admin-gem-controls');
+            const adminUsersCard = document.getElementById('admin-users-card');
+            const adminEmployeeInputs = document.getElementById('admin-employee-inputs');
+
+            if (adminGoldCard) adminGoldCard.classList.toggle('hidden', !superAdmin);
+            if (adminGemControls) adminGemControls.classList.toggle('hidden', !superAdmin);
+            if (adminUsersCard) adminUsersCard.classList.toggle('hidden', !superAdmin);
+            if (adminEmployeeInputs) adminEmployeeInputs.classList.toggle('hidden', !superAdmin);
+
+            document.querySelectorAll('.admin-only-col').forEach(el => {
+                el.classList.toggle('hidden', !superAdmin);
+            });
         }
 
         function showToast(message) {
@@ -559,7 +620,6 @@
                 .replace(/"/g, "&quot;");
         }
 
-        // Switch Navigation Tabs
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-tab').forEach(el => {
@@ -581,8 +641,105 @@
             }
         }
 
-        // --- ALCHEMY FUNCTIONS ---
+        // BOUTIQUE & ENCHANTEMENT
+        function renderGoldBalance() {
+            document.getElementById('gold-balance').innerText = data.gold || 0;
+        }
 
+        function modifyGold(dir) {
+            const qty = parseInt(document.getElementById('gold-qty').value) || 0;
+            data.gold = (data.gold || 0) + (qty * dir);
+            if (data.gold < 0) data.gold = 0;
+            renderGoldBalance();
+            showToast(`Caisse d'enchanterie mise à jour: ${data.gold} septims.`);
+        }
+
+        function submitSale() {
+            const desc = document.getElementById('sale-description').value.trim();
+            const amount = parseInt(document.getElementById('sale-amount').value);
+            if (!desc || isNaN(amount) || amount <= 0) {
+                showToast("Veuillez indiquer une description et un prix valide.");
+                return;
+            }
+            const gain = Math.round(amount * 0.95);
+            data.gold = (data.gold || 0) + gain;
+            renderGoldBalance();
+            document.getElementById('sale-description').value = '';
+            document.getElementById('sale-amount').value = '';
+            showToast(`Vente enregistrée ! +${gain} septims dans la caisse.`);
+        }
+
+        function renderGemInventory() {
+            const list = document.getElementById('inventory-list');
+            let total = 0;
+            list.innerHTML = Object.entries(data.gems || {}).map(([name, gem]) => {
+                const val = gem.qty * gem.price;
+                total += val;
+                return `
+                    <tr>
+                        <td class="py-2.5 text-slate-200 font-medium">${escapeHTML(name)}</td>
+                        <td class="py-2.5 text-right text-amber-400 font-semibold">${gem.price} s</td>
+                        <td class="py-2.5 text-right font-bold text-sky-400">${gem.qty}</td>
+                        <td class="py-2.5 text-right text-slate-300">${val} s</td>
+                    </tr>
+                `;
+            }).join('');
+            document.getElementById('stock-value').innerText = total;
+        }
+
+        function modifyGem(dir) {
+            const gem = document.getElementById('gem-select').value;
+            const qty = parseInt(document.getElementById('gem-qty').value) || 0;
+            if (data.gems[gem]) {
+                data.gems[gem].qty += (qty * dir);
+                if (data.gems[gem].qty < 0) data.gems[gem].qty = 0;
+                renderGemInventory();
+                showToast(`Stock de gemmes mis à jour.`);
+            }
+        }
+
+        // MEMBRES RP
+        function renderEmployees() {
+            const list = document.getElementById('employee-list');
+            list.innerHTML = (data.employees || []).map(emp => `
+                <tr>
+                    <td class="py-2.5 text-slate-200 font-medium">${escapeHTML(emp.name)}</td>
+                    <td class="py-2.5 text-sky-400 font-semibold">${escapeHTML(emp.role)}</td>
+                    <td class="py-2.5 text-right text-amber-400 font-semibold">${emp.salary} s</td>
+                    <td class="py-2.5 text-right admin-only-col">
+                        <button onclick="deleteEmployee(${emp.id})" class="text-xs bg-rose-900/50 hover:bg-rose-800 text-rose-300 px-2 py-1 rounded">Supprimer</button>
+                    </td>
+                </tr>
+            `).join('');
+            updateAdminVisibility();
+        }
+
+        function addEmployee() {
+            const name = document.getElementById('emp-name').value.trim();
+            const role = document.getElementById('emp-role').value;
+            const salary = parseInt(document.getElementById('emp-salary').value) || 0;
+
+            if (!name) {
+                showToast("Veuillez indiquer un nom.");
+                return;
+            }
+
+            if (!data.employees) data.employees = [];
+            data.employees.push({ id: Date.now(), name, role, salary });
+
+            document.getElementById('emp-name').value = '';
+            document.getElementById('emp-salary').value = '';
+            renderEmployees();
+            showToast(`Membre RP ${name} ajouté !`);
+        }
+
+        function deleteEmployee(id) {
+            data.employees = (data.employees || []).filter(e => e.id !== id);
+            renderEmployees();
+            showToast("Membre supprimé.");
+        }
+
+        // ALCHIMIE
         function initAlchemyStock() {
             if (!data.alchemyStock) data.alchemyStock = {};
             if (!data.alchemyPrices) data.alchemyPrices = {};
@@ -610,14 +767,10 @@
             document.getElementById('alchemy-gold-balance').innerText = data.alchemyGold || 0;
         }
 
-        function modifyAlchemyGold(direction) {
+        function modifyAlchemyGold(dir) {
             const qty = parseInt(document.getElementById('alchemy-gold-qty').value) || 0;
-            if (qty <= 0) return;
-
-            data.alchemyGold = (data.alchemyGold || 0) + (qty * direction);
+            data.alchemyGold = (data.alchemyGold || 0) + (qty * dir);
             if (data.alchemyGold < 0) data.alchemyGold = 0;
-
-            saveDataToBin();
             renderAlchemyGold();
             showToast(`Caisse d'alchimie mise à jour: ${data.alchemyGold} septims.`);
         }
@@ -655,7 +808,6 @@
             const recipe = (data.alchemyRecipes || []).find(r => r.id === selectVal);
             if (!recipe) return;
 
-            // Verifier le stock
             for (const [ing, qty] of Object.entries(recipe.ingredients)) {
                 if ((data.alchemyStock[ing] || 0) < qty) {
                     showToast(`Stock insuffisant en ${ing} !`);
@@ -663,19 +815,16 @@
                 }
             }
 
-            // Consommer les ingrédients
             for (const [ing, qty] of Object.entries(recipe.ingredients)) {
                 data.alchemyStock[ing] -= qty;
             }
 
-            saveDataToBin();
             renderAlchemyUI();
-            showToast(`Potion concoctée avec succès : ${recipe.name} !`);
+            showToast(`Potion concoctée : ${recipe.name} !`);
         }
 
         function toggleRecipeEditor() {
-            const panel = document.getElementById('recipe-editor-panel');
-            panel.classList.toggle('hidden');
+            document.getElementById('recipe-editor-panel').classList.toggle('hidden');
         }
 
         function renderRecipeEditorIngredients() {
@@ -708,14 +857,8 @@
             if (ing2) ingredients[ing2] = qty2;
             if (ing3) ingredients[ing3] = qty3;
 
-            if (Object.keys(ingredients).length === 0) {
-                showToast("Veuillez choisir au moins un ingrédient.");
-                return;
-            }
-
             if (!data.alchemyRecipes) data.alchemyRecipes = [];
 
-            // Existe déjà ?
             const existingIndex = data.alchemyRecipes.findIndex(r => r.name.toLowerCase() === name.toLowerCase());
             const newRecipe = {
                 id: existingIndex >= 0 ? data.alchemyRecipes[existingIndex].id : 'rec_' + Date.now(),
@@ -730,15 +873,13 @@
                 data.alchemyRecipes.push(newRecipe);
             }
 
-            saveDataToBin();
             renderAlchemyUI();
-            showToast(`Recette "${name}" enregistrée (${price} septims) !`);
+            showToast(`Recette "${name}" enregistrée !`);
         }
 
         function deleteRecipe() {
             const selectVal = document.getElementById('potion-recipe-select').value;
             data.alchemyRecipes = (data.alchemyRecipes || []).filter(r => r.id !== selectVal);
-            saveDataToBin();
             renderAlchemyUI();
             showToast("Recette supprimée.");
         }
@@ -760,45 +901,8 @@
             if (!data.alchemyPrices) data.alchemyPrices = {};
             data.alchemyPrices[ing] = newPrice;
 
-            saveDataToBin();
             renderAlchemyUI();
             showToast(`Prix de "${ing}" mis à jour : ${newPrice} septims.`);
-        }
-        // Liste des IDs Discord ayant un accès Administrateur Supérieur / Grand Maître
-        const ADMIN_DISCORD_IDS = ['232537879207739394'];
-
-        // Vérification universelle des permissions
-        function isSuperAdmin() {
-            return currentUser && (ADMIN_DISCORD_IDS.includes(currentUser.id) || currentUser.role === 'Grand Maître');
-        }
-
-        function isAdmin() {
-            return isSuperAdmin() || (currentUser && currentUser.role === 'Enchanteur');
-        }
-
-        function isAlchemist() {
-            return isSuperAdmin() || (currentUser && currentUser.role === 'Alchimiste');
-        }
-
-        // Fonction d'affichage / rafraîchissement des panneaux d'administration
-        function updateAdminVisibility() {
-            const superAdmin = isSuperAdmin();
-
-            // Panel Administrateur (Gestion Or, Gemmes, Audit & Commandes)
-            const adminGoldCard = document.getElementById('admin-gold-card');
-            const adminGemControls = document.getElementById('admin-gem-controls');
-            const adminUsersCard = document.getElementById('admin-users-card');
-            const adminEmployeeInputs = document.getElementById('admin-employee-inputs');
-
-            if (adminGoldCard) adminGoldCard.classList.toggle('hidden', !superAdmin);
-            if (adminGemControls) adminGemControls.classList.toggle('hidden', !superAdmin);
-            if (adminUsersCard) adminUsersCard.classList.toggle('hidden', !superAdmin);
-            if (adminEmployeeInputs) adminEmployeeInputs.classList.toggle('hidden', !superAdmin);
-
-            // Affichage des colonnes d'actions réservées aux Admins/Grand Maître dans le registre des membres
-            document.querySelectorAll('.admin-only-col').forEach(el => {
-                el.classList.toggle('hidden', !superAdmin);
-            });
         }
 
         function renderAlchemyStock() {
@@ -836,7 +940,6 @@
         function adjustIngredientStock(ing, delta) {
             data.alchemyStock[ing] = (data.alchemyStock[ing] || 0) + delta;
             if (data.alchemyStock[ing] < 0) data.alchemyStock[ing] = 0;
-            saveDataToBin();
             renderAlchemyStock();
             updateRecipeDetails();
         }
@@ -865,11 +968,6 @@
         }
 
         function submitAlchemySale() {
-            if (!currentUser) {
-                showToast("Vous devez être connecté.");
-                return;
-            }
-
             const type = document.getElementById('alchemy-sale-type').value;
             const description = document.getElementById('alchemy-sale-description').value.trim();
             const amount = parseInt(document.getElementById('alchemy-sale-amount').value);
@@ -888,7 +986,7 @@
 
             const sale = {
                 id: Date.now(),
-                seller: currentUser.username || currentUser.name || "Alchimiste",
+                seller: currentUser ? currentUser.username : "Alchimiste",
                 type: type,
                 description: description,
                 price: amount,
@@ -897,7 +995,6 @@
 
             data.alchemySalesHistory.unshift(sale);
 
-            saveDataToBin();
             renderAlchemyGold();
             renderAlchemySalesHistory();
             showToast(`Vente enregistrée ! +${caisseGain} septims dans la caisse d'alchimie.`);
@@ -923,19 +1020,7 @@
             `).join('');
         }
 
-        // Fake JSONBIN persistence handlers
-        function saveDataToBin() {
-            console.log("Saving data...", data);
-        }
-
-        function loginWithDiscord() {
-            currentUser = { id: '232537879207739394', username: 'AlchimisteRP' };
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            renderAlchemyUI();
-        }
-
-        // Auto init for preview
+        // Auto-connexion au chargement de la page
         window.onload = () => {
             loginWithDiscord();
         };
