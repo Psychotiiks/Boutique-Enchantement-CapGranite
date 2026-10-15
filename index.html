@@ -81,9 +81,11 @@
                 </div>
             </div>
 
-            <!-- Stock de Gemmes -->
+            <!-- Stock de Gemmes & Modification des Prix -->
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
-                <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Stock de Gemmes Spirituelles</h2>
+                <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Stock de Gemmes Spirituelles & Prix</h2>
+                
+                <!-- Contrôles admin/enchanteur pour les gemmes -->
                 <div id="admin-gem-controls" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 hidden">
                     <select id="gem-select" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
                         <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
@@ -95,6 +97,15 @@
                         <button class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2 rounded-lg text-sm transition" onclick="modifyGem(-1)">Retirer</button>
                     </div>
                 </div>
+
+                <!-- Modifier prix d'une gemme (Admin/Enchanteur) -->
+                <div id="admin-gem-price-panel" class="mb-4 p-4 bg-slate-950/60 rounded-lg border border-slate-800/80 flex flex-wrap gap-3 items-center hidden">
+                    <span class="text-xs text-slate-300 font-semibold uppercase">Modifier Prix Gemme :</span>
+                    <select id="gem-price-select" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none"></select>
+                    <input type="number" id="gem-new-price" placeholder="Nouveau prix" min="0" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 w-32 outline-none">
+                    <button class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition" onclick="updateGemPrice()">Mettre à jour</button>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead>
@@ -110,6 +121,40 @@
                 </div>
             </div>
 
+            <!-- Tableau des Enchantements Possibles & Tarifs -->
+            <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
+                <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
+                    <span>✨ Catalogue des Enchantements Possibles & Tarifs</span>
+                    <button id="toggle-enchant-editor-btn" class="text-xs bg-slate-800 hover:bg-slate-700 text-sky-400 px-3 py-1.5 rounded-lg border border-sky-500/30 font-medium hidden" onclick="toggleEnchantEditor()">⚙️ Ajouter / Gérer</button>
+                </h2>
+
+                <!-- Panneau Ajout/Édition Enchantement (Admin/Enchanteur) -->
+                <div id="enchant-editor-panel" class="hidden mb-4 p-4 bg-slate-950/80 rounded-lg border border-sky-500/30 flex flex-wrap gap-3 items-center">
+                    <input type="text" id="new-ench-name" placeholder="Nom de l'enchantement (ex: Feu ardent)" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none flex-1 min-w-40">
+                    <select id="new-ench-cat" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none">
+                        <option value="Arme">Arme</option>
+                        <option value="Armure">Armure</option>
+                        <option value="Bijou">Bijou</option>
+                    </select>
+                    <input type="number" id="new-ench-price" placeholder="Prix (s)" min="0" value="100" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-24 outline-none">
+                    <button class="bg-sky-600 hover:bg-sky-500 text-white font-semibold px-4 py-1.5 rounded-lg text-xs" onclick="saveEnchantmentCatalog()">Enregistrer</button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="pb-3 font-semibold">Catégorie</th>
+                                <th class="pb-3 font-semibold">Nom de l'Enchantement</th>
+                                <th class="pb-3 font-semibold text-right">Prix Conseillé</th>
+                                <th id="ench-actions-th" class="pb-3 font-semibold text-right hidden">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="enchantments-catalog-list" class="divide-y divide-slate-800/50"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Registre des Membres -->
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Registre des Membres RP</h2>
@@ -121,6 +166,11 @@
                             <option value="Alchimiste">🧪 Alchimiste</option>
                             <option value="Guerrier">⚔️ Guerrier</option>
                             <option value="Forgeron">🔨 Forgeron</option>
+                            <option value="Mineur">⛏️ Mineur</option>
+                            <option value="Cuisinier">🍳 Cuisinier</option>
+                            <option value="Chasseur">🏹 Chasseur</option>
+                            <option value="Couturier">🧵 Couturier</option>
+                            <option value="Menuisier">🪓 Menuisier</option>
                             <option value="Visiteur">👤 Visiteur</option>
                         </select>
                         <input type="number" id="emp-salary" placeholder="Rémunération" min="0" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
@@ -290,11 +340,15 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHmNh6wEEMGNfylskirp6jstABo2fzeGqkHLx7bTFpdUhE4ulD7Vzp-Xpnkss4nVKl/exec'; // Collez votre URL ici
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHmNh6wEEMGNfylskirp6jstABo2fzeGqkHLx7bTFpdUhE4ulD7Vzp-Xpnkss4nVKl/exec';
         const ADMIN_DISCORD_IDS = ['232537879207739394'];
 
         const defaultIngredients = ["Ail", "Abeille", "Blé", "Cœur de daedra", "Clochette de la mort", "Lavande", "Poussière de sel", "Sel de feu", "Venin d'araignée"];
         const defaultRecipes = [{ id: "r1", name: "Potion de Soin Majeure", price: 150, ingredients: { "Blé": 1 } }];
+        const defaultEnchantments = [
+            { id: "e1", category: "Arme", name: "Feu ardent", price: 150 },
+            { id: "e2", category: "Armure", name: "Santé accrue", price: 200 }
+        ];
 
         let data = {
             gold: 1696,
@@ -303,7 +357,8 @@
                 "Gemme Spirituelle Vide": { "qty": 265, "price": 10 },
                 "Gemme Spirituelle Pleine": { "qty": 248, "price": 10 }
             },
-            employees: [{ "id": 1, "name": "Maelor Lourde-Lame", "role": "Alchimiste", "salary": 0 }],
+            enchantmentsCatalog: defaultEnchantments,
+            employees: [{ "id": 1, "name": "Maelor Lourde-Lame", "role": "Enchanteur", "salary": 0 }],
             alchemyStock: {},
             alchemyPrices: {},
             alchemyRecipes: defaultRecipes,
@@ -330,7 +385,7 @@
                 statusEl.innerText = 'Mode Local (Erreur Cloud)';
                 statusEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-amber-950/80 border border-amber-600/50 text-amber-300';
             }
-            initAlchemyDefaults();
+            initDefaults();
             renderAllUI();
         }
 
@@ -352,9 +407,11 @@
             }
         }
 
-        function initAlchemyDefaults() {
+        function initDefaults() {
             if (!data.ingredientsList) data.ingredientsList = defaultIngredients;
             if (!data.alchemyRecipes) data.alchemyRecipes = defaultRecipes;
+            if (!data.enchantmentsCatalog) data.enchantmentsCatalog = defaultEnchantments;
+            if (!data.gems) data.gems = { "Gemme Spirituelle Vide": { qty: 0, price: 10 }, "Gemme Spirituelle Pleine": { qty: 0, price: 20 } };
             if (!data.alchemyStock) data.alchemyStock = {};
             if (!data.alchemyPrices) data.alchemyPrices = {};
             if (!data.alchemySalesHistory) data.alchemySalesHistory = [];
@@ -369,6 +426,8 @@
             document.getElementById('gold-balance').innerText = data.gold || 0;
             document.getElementById('alchemy-gold-balance').innerText = data.alchemyGold || 0;
             renderGemInventory();
+            renderGemPriceSelect();
+            renderEnchantmentsCatalog();
             renderEmployees();
             renderAlchemyStock();
             renderRecipeSelect();
@@ -376,6 +435,7 @@
             renderIngredientPriceSelect();
             renderAlchemySaleTypeSelect();
             renderAlchemySalesHistory();
+            updateAdminVisibility();
         }
 
         function loginWithDiscord() {
@@ -383,7 +443,8 @@
             updateAuthUI();
             updateAdminVisibility();
             renderEmployees();
-            showToast("Connecté en Admin !");
+            renderEnchantmentsCatalog();
+            showToast("Connecté en Admin/Enchanteur !");
         }
 
         function logout() {
@@ -391,26 +452,36 @@
             updateAuthUI();
             updateAdminVisibility();
             renderEmployees();
+            renderEnchantmentsCatalog();
             showToast("Déconnecté.");
         }
 
         function updateAuthUI() {
             const authContainer = document.getElementById('auth-container');
             if (currentUser) {
-                authContainer.innerHTML = `<div class="flex items-center gap-3 bg-slate-900/90 border border-amber-500/40 px-4 py-2 rounded-lg shadow-lg"><span class="text-xs text-amber-300 font-bold">🛡️ Admin</span><button onclick="logout()" class="text-xs text-slate-400 hover:text-rose-400">Déconnexion</button></div>`;
+                authContainer.innerHTML = `<div class="flex items-center gap-3 bg-slate-900/90 border border-amber-500/40 px-4 py-2 rounded-lg shadow-lg"><span class="text-xs text-amber-300 font-bold">🛡️ Enchanteur / Admin</span><button onclick="logout()" class="text-xs text-slate-400 hover:text-rose-400">Déconnexion</button></div>`;
             } else {
                 authContainer.innerHTML = `<button onclick="loginWithDiscord()" class="bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-md"><span>Connexion Discord (Admin)</span></button>`;
             }
         }
 
-        function isAdmin() { return currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id); }
+        function isAdminOrEnchanter() {
+            if (!currentUser) return false;
+            if (ADMIN_DISCORD_IDS.includes(currentUser.id)) return true;
+            // Vérifie aussi si le personnage connecté a le rôle Enchanteur dans le registre
+            const isEnchanterRP = (data.employees || []).some(e => e.name.toLowerCase() === currentUser.username.toLowerCase() && e.role === 'Enchanteur');
+            return isEnchanterRP;
+        }
 
         function updateAdminVisibility() {
-            const adminStatus = isAdmin();
-            document.getElementById('admin-gold-card')?.classList.toggle('hidden', !adminStatus);
-            document.getElementById('admin-gem-controls')?.classList.toggle('hidden', !adminStatus);
-            document.getElementById('admin-employee-inputs')?.classList.toggle('hidden', !adminStatus);
-            document.querySelectorAll('.admin-only-col').forEach(el => el.classList.toggle('hidden', !adminStatus));
+            const allowed = isAdminOrEnchanter();
+            document.getElementById('admin-gold-card')?.classList.toggle('hidden', !allowed);
+            document.getElementById('admin-gem-controls')?.classList.toggle('hidden', !allowed);
+            document.getElementById('admin-gem-price-panel')?.classList.toggle('hidden', !allowed);
+            document.getElementById('admin-employee-inputs')?.classList.toggle('hidden', !allowed);
+            document.getElementById('toggle-enchant-editor-btn')?.classList.toggle('hidden', !allowed);
+            document.querySelectorAll('.admin-only-col').forEach(el => el.classList.toggle('hidden', !allowed));
+            document.querySelectorAll('.enchanter-only-col').forEach(el => el.classList.toggle('hidden', !allowed));
         }
 
         function showToast(msg) {
@@ -439,7 +510,7 @@
 
         // --- ENCHANTEUR ---
         function modifyGold(dir) {
-            if (!isAdmin()) return;
+            if (!isAdminOrEnchanter()) return;
             const qty = parseInt(document.getElementById('gold-qty').value) || 0;
             data.gold = Math.max(0, (data.gold || 0) + (qty * dir));
             saveCloudData();
@@ -467,8 +538,26 @@
             document.getElementById('stock-value').innerText = total;
         }
 
+        function renderGemPriceSelect() {
+            const sel = document.getElementById('gem-price-select');
+            if (!sel) return;
+            sel.innerHTML = Object.keys(data.gems || {}).map(gem => `<option value="${gem}">${gem} (${data.gems[gem].price}s)</option>`).join('');
+        }
+
+        function updateGemPrice() {
+            if (!isAdminOrEnchanter()) return;
+            const gem = document.getElementById('gem-price-select').value;
+            const newPrice = parseInt(document.getElementById('gem-new-price').value);
+            if (!gem || isNaN(newPrice) || newPrice < 0) return showToast("Prix invalide.");
+            if (data.gems[gem]) {
+                data.gems[gem].price = newPrice;
+                saveCloudData();
+                showToast(`Prix de "${gem}" mis à jour (${newPrice}s).`);
+            }
+        }
+
         function modifyGem(dir) {
-            if (!isAdmin()) return;
+            if (!isAdminOrEnchanter()) return;
             const gem = document.getElementById('gem-select').value;
             const qty = parseInt(document.getElementById('gem-qty').value) || 0;
             if (data.gems[gem]) {
@@ -477,36 +566,94 @@
             }
         }
 
+        // --- CATALOGUE ENCHANTEMENTS ---
+        function toggleEnchantEditor() {
+            document.getElementById('enchant-editor-panel')?.classList.toggle('hidden');
+        }
+
+        function saveEnchantmentCatalog() {
+            if (!isAdminOrEnchanter()) return;
+            const name = document.getElementById('new-ench-name').value.trim();
+            const category = document.getElementById('new-ench-cat').value;
+            const price = parseInt(document.getElementById('new-ench-price').value) || 0;
+
+            if (!name) return showToast("Nom de l'enchantement requis.");
+            if (!data.enchantmentsCatalog) data.enchantmentsCatalog = [];
+
+            data.enchantmentsCatalog.push({ id: 'enc_' + Date.now(), category, name, price });
+            document.getElementById('new-ench-name').value = '';
+            toggleEnchantEditor();
+            saveCloudData();
+            showToast(`Enchantement "${name}" ajouté au catalogue !`);
+        }
+
+        function removeEnchantmentCatalog(id) {
+            if (!isAdminOrEnchanter()) return;
+            data.enchantmentsCatalog = (data.enchantmentsCatalog || []).filter(e => e.id !== id);
+            saveCloudData();
+            showToast("Enchantement supprimé du catalogue.");
+        }
+
+        function renderEnchantmentsCatalog() {
+            const list = document.getElementById('enchantments-catalog-list');
+            const actionsTh = document.getElementById('ench-actions-th');
+            if (!list) return;
+            const allowed = isAdminOrEnchanter();
+            actionsTh?.classList.toggle('hidden', !allowed);
+
+            const items = data.enchantmentsCatalog || [];
+            if (items.length === 0) {
+                list.innerHTML = `<tr><td colspan="4" class="py-3 text-center text-slate-500 italic">Aucun enchantement répertorié.</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = items.map(ench => `
+                <tr>
+                    <td class="py-2.5 text-sky-400 font-semibold">${escapeHTML(ench.category)}</td>
+                    <td class="py-2.5 text-slate-200">${escapeHTML(ench.name)}</td>
+                    <td class="py-2.5 text-right text-amber-400 font-bold">${ench.price}s</td>
+                    <td class="py-2.5 text-right enchanter-only-col ${allowed ? '' : 'hidden'}">
+                        <button onclick="removeEnchantmentCatalog('${ench.id}')" class="text-xs bg-rose-950 text-rose-300 px-2 py-1 rounded">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
         function renderEmployees() {
             const list = document.getElementById('employee-list');
             if (!list) return;
-            const adminStatus = isAdmin();
+            const allowed = isAdminOrEnchanter();
             list.innerHTML = (data.employees || []).map(emp => `
                 <tr>
                     <td class="py-2.5 text-slate-200">${escapeHTML(emp.name)}</td>
                     <td class="py-2.5 text-sky-400">
-                        <select onchange="updateEmployeeRole(${emp.id}, this.value)" class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-sky-300 outline-none ${adminStatus ? '' : 'pointer-events-none appearance-none'}">
+                        <select onchange="updateEmployeeRole(${emp.id}, this.value)" class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-sky-300 outline-none ${allowed ? '' : 'pointer-events-none appearance-none'}">
                             <option value="Enchanteur" ${emp.role === 'Enchanteur' ? 'selected' : ''}>✨ Enchanteur</option>
                             <option value="Alchimiste" ${emp.role === 'Alchimiste' ? 'selected' : ''}>🧪 Alchimiste</option>
                             <option value="Guerrier" ${emp.role === 'Guerrier' ? 'selected' : ''}>⚔️ Guerrier</option>
                             <option value="Forgeron" ${emp.role === 'Forgeron' ? 'selected' : ''}>🔨 Forgeron</option>
+                            <option value="Mineur" ${emp.role === 'Mineur' ? 'selected' : ''}>⛏️ Mineur</option>
+                            <option value="Cuisinier" ${emp.role === 'Cuisinier' ? 'selected' : ''}>🍳 Cuisinier</option>
+                            <option value="Chasseur" ${emp.role === 'Chasseur' ? 'selected' : ''}>🏹 Chasseur</option>
+                            <option value="Couturier" ${emp.role === 'Couturier' ? 'selected' : ''}>🧵 Couturier</option>
+                            <option value="Menuisier" ${emp.role === 'Menuisier' ? 'selected' : ''}>🪓 Menuisier</option>
                             <option value="Visiteur" ${emp.role === 'Visiteur' ? 'selected' : ''}>👤 Visiteur</option>
                         </select>
                     </td>
                     <td class="py-2.5 text-right text-amber-400">${emp.salary || 0}s</td>
-                    <td class="py-2.5 text-right admin-only-col ${adminStatus ? '' : 'hidden'}"><button onclick="deleteEmployee(${emp.id})" class="text-xs bg-rose-900/50 text-rose-300 px-2 py-1 rounded">Supprimer</button></td>
+                    <td class="py-2.5 text-right admin-only-col ${allowed ? '' : 'hidden'}"><button onclick="deleteEmployee(${emp.id})" class="text-xs bg-rose-900/50 text-rose-300 px-2 py-1 rounded">Supprimer</button></td>
                 </tr>
             `).join('');
         }
 
         function updateEmployeeRole(id, role) {
-            if (!isAdmin()) return;
+            if (!isAdminOrEnchanter()) return;
             const emp = data.employees.find(e => e.id === id);
             if (emp) { emp.role = role; saveCloudData(); showToast("Rôle mis à jour !"); }
         }
 
         function addEmployee() {
-            if (!isAdmin()) return;
+            if (!isAdminOrEnchanter()) return;
             const name = document.getElementById('emp-name').value.trim();
             const role = document.getElementById('emp-role').value;
             const salary = parseInt(document.getElementById('emp-salary').value) || 0;
@@ -518,7 +665,7 @@
         }
 
         function deleteEmployee(id) {
-            if (!isAdmin()) return;
+            if (!isAdminOrEnchanter()) return;
             data.employees = data.employees.filter(e => e.id !== id);
             saveCloudData();
         }
