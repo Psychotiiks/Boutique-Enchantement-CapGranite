@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="fr"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Officine Lourde-Lame - Skyrim RP</title>
+    <title>Enchantement & Alchimie Lourde-Lame - Skyrim RP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
@@ -19,16 +19,26 @@
         }
     </style></head><body class="flex flex-col items-center p-4 md:p-8">
 
-    <!-- Main App Container -->
-    <div id="app-container" class="w-full max-w-5xl flex flex-col items-center">
-        
-        <!-- User Top Bar (Connexion/Déconnexion Discord & Admin) -->
-        <div class="w-full flex justify-end mb-4">
-            <div id="auth-container">
-                <button onclick="loginWithDiscord()" class="bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center gap-2 shadow-md">
-                    <span>Connexion Discord</span>
-                </button>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center z-50 p-4 text-center">
+        <div class="bg-slate-900/90 border border-sky-500/30 rounded-xl p-8 max-w-md w-full shadow-2xl">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-sky-900/40 to-slate-800 border-2 border-sky-400 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-sky-500/20">
+                <span class="text-4xl text-sky-400">ᛋ</span>
             </div>
+            <h1 class="text-2xl font-bold tracking-wider mb-2 text-slate-100">Officine Lourde-Lame</h1>
+            <p class="text-slate-400 text-sm mb-6">Authentifiez-vous avec votre compte Discord pour accéder au registre de l'officine.</p>
+            <button onclick="loginWithDiscord()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-3 shadow-md">
+                <span>Connexion Discord</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="hidden w-full max-w-5xl flex-col items-center">
+        
+        <!-- User Top Bar -->
+        <div class="w-full flex justify-end mb-4">
+            <div id="auth-container"></div>
         </div>
 
         <!-- Header -->
@@ -37,7 +47,7 @@
                 <span class="text-4xl text-sky-400 font-bold">ᛋ</span>
             </div>
             <h1 class="text-3xl font-extrabold tracking-widest text-slate-100 uppercase">Officine Lourde-Lame</h1>
-            <div class="mt-1"><span id="sync-status" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700">Registre Ouvert</span></div>
+            <div class="mt-1"><span id="sync-status" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700">Synchronisation...</span></div>
         </div>
 
         <!-- Navigation Tabs -->
@@ -120,6 +130,48 @@
                 </div>
             </div>
 
+            <!-- Admin Panel (Admin Only) -->
+            <div id="admin-users-card" class="bg-slate-900/80 backdrop-blur border border-sky-500/30 rounded-xl p-6 w-full shadow-xl hidden">
+                <h2 class="text-lg font-bold text-sky-300 border-b border-slate-800 pb-3 mb-4">Panel Maître Enchanteur (Admin)</h2>
+                
+                <h3 class="text-sm font-semibold text-slate-300 mb-3">📦 Commandes Reçues</h3>
+                <div class="max-h-60 overflow-y-auto mb-6 pr-1">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="pb-2 font-semibold">Client Discord</th>
+                                <th class="pb-2 font-semibold">Demande</th>
+                                <th class="pb-2 font-semibold">Gemmes</th>
+                                <th class="pb-2 font-semibold text-right">Prix</th>
+                                <th class="pb-2 font-semibold text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-orders-list" class="divide-y divide-slate-800/50"></tbody>
+                    </table>
+                </div>
+
+                <div class="border-t border-slate-800 pt-4 mb-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Modification des Prix des Gemmes</h3>
+                    <div class="flex gap-3 flex-wrap">
+                        <select id="admin-gem-select" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
+                            <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
+                            <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
+                        </select>
+                        <input type="number" id="admin-gem-new-price" placeholder="Nouveau prix" min="0" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 w-36 outline-none">
+                        <button class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition" onclick="updateGemPrice()">Changer le Prix</button>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-4 mb-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Journal d'Audit</h3>
+                    <div class="max-h-40 overflow-y-auto pr-1">
+                        <table class="w-full text-left text-xs">
+                            <tbody id="audit-list" class="divide-y divide-slate-800/30"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Employees / Membres RP -->
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Registre des Membres & Enchanteurs RP</h2>
@@ -128,11 +180,10 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <input type="text" id="emp-name" placeholder="Nom du personnage RP" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
                         <select id="emp-role" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
-                            <option value="Grand Maître">👑 Grand Maître (Omnipotent / Admin)</option>
-                            <option value="Alchimiste">🧪 Alchimiste</option>
-                            <option value="Enchanteur">✨ Enchanteur</option>
                             <option value="Guerrier">⚔️ Guerrier</option>
                             <option value="Forgeron">🔨 Forgeron</option>
+                            <option value="Alchimiste">🧪 Alchimiste</option>
+                            <option value="Enchanteur">✨ Enchanteur</option>
                             <option value="Mineur">⛏️ Mineur</option>
                             <option value="Cuisinier">🍳 Cuisinier</option>
                             <option value="Chasseur">🏹 Chasseur</option>
@@ -173,7 +224,7 @@
                 <div class="flex flex-col gap-4 max-w-lg mx-auto">
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wide">Type d'objet :</label>
-                        <select id="order-item-type" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-sky-500">
+                        <select id="order-item-type" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-sky-500" onchange="updateOrderForm()">
                             <option value="Armure">🛡️ Armure</option>
                             <option value="Arme">⚔️ Arme</option>
                             <option value="Bijou">💍 Bijou</option>
@@ -181,17 +232,41 @@
                     </div>
 
                     <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wide">Enchantement voulu :</label>
+                        <select id="order-enchantment" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-sky-500"></select>
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wide">Précisions sur l'objet :</label>
                         <input type="text" id="order-details" placeholder="Ex: Gants en cuir clouté, Anneau en or massif..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-sky-500">
                     </div>
 
-                    <div class="bg-sky-950/30 border border-sky-500/20 p-4 rounded-lg text-center">
-                        <div class="text-lg font-bold text-amber-400">
-                            Prix Total Estimé : 1500 septims
+                    <div class="bg-slate-950/60 p-4 rounded-lg border border-slate-800">
+                        <label class="flex items-center gap-3 cursor-pointer text-slate-200 font-medium text-sm">
+                            <input type="checkbox" id="order-provide-gems" onchange="toggleGemInputs()" class="w-4 h-4 rounded text-sky-600 focus:ring-0 cursor-pointer">
+                            Je fournis mes propres gemmes spirituelles
+                        </label>
+                        
+                        <div id="gem-inputs-container" class="hidden mt-3 grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Gemmes Vides (-10s/u) :</label>
+                                <input type="number" id="order-gems-empty" value="0" min="0" oninput="calculateOrderPrice()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Gemmes Pleines (-10s/u) :</label>
+                                <input type="number" id="order-gems-full" value="0" min="0" oninput="calculateOrderPrice()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
+                            </div>
                         </div>
                     </div>
 
-                    <button class="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-semibold py-3 rounded-lg text-sm transition shadow-lg mt-2" onclick="showToast('Commande envoyée !')">Envoyer la Commande</button>
+                    <div class="bg-sky-950/30 border border-sky-500/20 p-4 rounded-lg text-center">
+                        <span class="text-xs text-slate-400 block mb-1">Tarif de base : 1500 septims &bull; Réduction gemmes : <span id="order-discount" class="text-emerald-400 font-semibold">-0</span> septims</span>
+                        <div class="text-lg font-bold text-amber-400">
+                            Prix Total Estimé : <span id="order-total-price">1500</span> septims
+                        </div>
+                    </div>
+
+                    <button class="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-semibold py-3 rounded-lg text-sm transition shadow-lg mt-2" onclick="submitOrder()">Envoyer la Commande</button>
                 </div>
             </div>
         </div>
@@ -205,13 +280,12 @@
                         <thead>
                             <tr class="border-b border-slate-800 text-slate-400">
                                 <th class="pb-3 font-semibold">Type & Enchantement</th>
+                                <th class="pb-3 font-semibold">Gemmes Fournies</th>
                                 <th class="pb-3 font-semibold text-right">Prix Final</th>
                                 <th class="pb-3 font-semibold text-right">Statut</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr><td colspan="3" class="py-4 text-center text-slate-500 italic">Aucune commande en cours.</td></tr>
-                        </tbody>
+                        <tbody id="my-orders-list" class="divide-y divide-slate-800/50"></tbody>
                     </table>
                 </div>
             </div>
@@ -232,7 +306,7 @@
                 </div>
             </div>
 
-            <!-- Gestion Caisse Alchimiste -->
+            <!-- Gestion Caisse Alchimiste (Admin / Alchimiste) -->
             <div id="alchemy-gold-card" class="bg-slate-900/80 backdrop-blur border border-emerald-500/30 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-amber-300 border-b border-slate-800 pb-3 mb-4">💰 Gestion de la Caisse d'Alchimie</h2>
                 <div class="flex gap-3 flex-wrap items-center">
@@ -246,7 +320,7 @@
             <div class="bg-slate-900/80 backdrop-blur border border-emerald-500/30 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-emerald-300 border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
                     <span class="flex items-center gap-2"><span>⚗️</span> Atelier de Concoction de Potions</span>
-                    <button class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/30" onclick="toggleRecipeEditor()">⚙️ Gérer / Créer des Recettes</button>
+                    <button class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/30 font-sans" onclick="toggleRecipeEditor()">⚙️ Gérer / Créer des Recettes</button>
                 </h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
@@ -271,7 +345,7 @@
                     <div id="recipe-ingredients-list" class="flex flex-wrap gap-2 text-sm pt-1"></div>
                 </div>
 
-                <!-- Moditeur / Créateur de recettes -->
+                <!-- Moditeur / Créateur de recettes (caché par défaut) -->
                 <div id="recipe-editor-panel" class="hidden mt-6 pt-6 border-t border-slate-800">
                     <h3 class="text-sm font-bold text-emerald-300 mb-3">🛠️ Créer / Éditer une Recette & Son Prix en Septims</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -305,7 +379,7 @@
                 <h2 class="text-lg font-bold text-emerald-300 border-b border-slate-800 pb-3 mb-4">📜 Enregistrer une Vente Alchimique</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                     <select id="alchemy-sale-type" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none" onchange="autoFillAlchemySalePrice()">
-                        <!-- Dynamic Options -->
+                        <!-- Dynamic Options from recipes & custom -->
                     </select>
                     <input type="text" id="alchemy-sale-description" placeholder="Nom/Description (ex: Potion de Soin Majeure)" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
                     <input type="number" id="alchemy-sale-amount" placeholder="Prix (septims)" min="1" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
@@ -364,11 +438,52 @@
 
     </div>
 
+    <!-- Edit Employee Modal -->
+    <div id="edit-emp-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-slate-900 border border-sky-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-100 mb-4 border-b border-slate-800 pb-2">Modifier le Membre RP</h3>
+            <input type="hidden" id="edit-emp-id">
+            <div class="flex flex-col gap-3 mb-6">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Nom RP :</label>
+                    <input type="text" id="edit-emp-name" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Rôle RP :</label>
+                    <select id="edit-emp-role" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
+                        <option value="Guerrier">⚔️ Guerrier</option>
+                        <option value="Forgeron">🔨 Forgeron</option>
+                        <option value="Alchimiste">🧪 Alchimiste</option>
+                        <option value="Enchanteur">✨ Enchanteur</option>
+                        <option value="Mineur">⛏️ Mineur</option>
+                        <option value="Cuisinier">🍳 Cuisinier</option>
+                        <option value="Chasseur">🏹 Chasseur</option>
+                        <option value="Couture">🧵 Couture</option>
+                        <option value="Menuisier">🪓 Menuisier</option>
+                        <option value="Visiteur">👤 Visiteur</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Rémunération RP :</label>
+                    <input type="number" id="edit-emp-salary" min="0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm transition" onclick="closeEditEmpModal()">Annuler</button>
+                <button class="bg-sky-600 hover:bg-sky-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition" onclick="saveEmployeeEdit()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script>
+        const DISCORD_CLIENT_ID = '1553203594667237446';
         const ADMIN_DISCORD_IDS = ['232537879207739394'];
+
+        const JSONBIN_BIN_ID = '6aa4e254ac6210605ac36471';
+        const JSONBIN_API_KEY = '$2a$10$A6xORNqdqhQ3gC8.y3Ub3.h9Ko95w.5wJEgbcWNDTDMMt6vO5xyp2';
 
         const skyrimIngredientsList = [
             "Aile de papillon", "Aile de papillon bleu", "Aile de monarque orange", "Aile de mophine lunaire", 
@@ -397,7 +512,7 @@
             { id: "r6", name: "Elixir de Forgeron", price: 200, ingredients: { "Graisse de troll": 1, "Chapeau blanc": 1 } }
         ];
 
-        let data = {
+        const defaultData = {
             gold: 1500,
             alchemyGold: 800,
             gems: {
@@ -405,74 +520,23 @@
                 "Gemme Spirituelle Pleine": { qty: 10, price: 150 }
             },
             employees: [
-                { id: 1, name: "Farengar", role: "Grand Maître", salary: 150 }
+                { id: 1, name: "Farengar", role: "Enchanteur", salary: 150 }
             ],
+            users: {},
+            salesHistory: [],
             alchemySalesHistory: [],
+            auditLogs: [],
+            orders: [],
             alchemyStock: {},
             alchemyPrices: {},
             alchemyRecipes: defaultRecipes
         };
 
+        let data = defaultData;
         let currentUser = null;
 
-        function loginWithDiscord() {
-            // Simulation connexion Admin avec votre ID
-            currentUser = { 
-                id: '232537879207739394',
-                username: 'Grand Maître (Admin)', 
-                role: 'Grand Maître' 
-            };
-
-            updateAuthUI();
-            updateAdminVisibility();
-            renderEmployees();
-            showToast("Connecté avec succès en tant qu'Administrateur !");
-        }
-
-        function logout() {
-            currentUser = null;
-            updateAuthUI();
-            updateAdminVisibility();
-            renderEmployees();
-            showToast("Déconnecté.");
-        }
-
-        function updateAuthUI() {
-            const authContainer = document.getElementById('auth-container');
-            if (currentUser) {
-                authContainer.innerHTML = `
-                    <div class="flex items-center gap-3 bg-slate-900/90 border border-amber-500/40 px-4 py-2 rounded-lg shadow-lg">
-                        <span class="text-xs text-amber-300 font-bold">👑 ${escapeHTML(currentUser.username)}</span>
-                        <button onclick="logout()" class="text-xs text-slate-400 hover:text-rose-400 font-medium transition">Déconnexion</button>
-                    </div>
-                `;
-            } else {
-                authContainer.innerHTML = `
-                    <button onclick="loginWithDiscord()" class="bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center gap-2 shadow-md">
-                        <span>Connexion Discord</span>
-                    </button>
-                `;
-            }
-        }
-
-        function isSuperAdmin() {
-            return currentUser && (ADMIN_DISCORD_IDS.includes(currentUser.id) || currentUser.role === 'Grand Maître');
-        }
-
-        function updateAdminVisibility() {
-            const superAdmin = isSuperAdmin();
-
-            const adminGoldCard = document.getElementById('admin-gold-card');
-            const adminGemControls = document.getElementById('admin-gem-controls');
-            const adminEmployeeInputs = document.getElementById('admin-employee-inputs');
-
-            if (adminGoldCard) adminGoldCard.classList.toggle('hidden', !superAdmin);
-            if (adminGemControls) adminGemControls.classList.toggle('hidden', !superAdmin);
-            if (adminEmployeeInputs) adminEmployeeInputs.classList.toggle('hidden', !superAdmin);
-
-            document.querySelectorAll('.admin-only-col').forEach(el => {
-                el.classList.toggle('hidden', !superAdmin);
-            });
+        function isAdmin() {
+            return currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id);
         }
 
         function showToast(message) {
@@ -494,6 +558,7 @@
                 .replace(/"/g, "&quot;");
         }
 
+        // Switch Navigation Tabs
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-tab').forEach(el => {
@@ -515,106 +580,8 @@
             }
         }
 
-        // BOUTIQUE & ENCHANTEMENT
-        function renderGoldBalance() {
-            document.getElementById('gold-balance').innerText = data.gold || 0;
-        }
+        // --- ALCHEMY FUNCTIONS ---
 
-        function modifyGold(dir) {
-            const qty = parseInt(document.getElementById('gold-qty').value) || 0;
-            data.gold = (data.gold || 0) + (qty * dir);
-            if (data.gold < 0) data.gold = 0;
-            renderGoldBalance();
-            showToast(`Caisse d'enchanterie mise à jour: ${data.gold} septims.`);
-        }
-
-        function submitSale() {
-            const desc = document.getElementById('sale-description').value.trim();
-            const amount = parseInt(document.getElementById('sale-amount').value);
-            if (!desc || isNaN(amount) || amount <= 0) {
-                showToast("Veuillez indiquer une description et un prix valide.");
-                return;
-            }
-            const gain = Math.round(amount * 0.95);
-            data.gold = (data.gold || 0) + gain;
-            renderGoldBalance();
-            document.getElementById('sale-description').value = '';
-            document.getElementById('sale-amount').value = '';
-            showToast(`Vente enregistrée ! +${gain} septims dans la caisse.`);
-        }
-
-        function renderGemInventory() {
-            const list = document.getElementById('inventory-list');
-            let total = 0;
-            list.innerHTML = Object.entries(data.gems || {}).map(([name, gem]) => {
-                const val = gem.qty * gem.price;
-                total += val;
-                return `
-                    <tr>
-                        <td class="py-2.5 text-slate-200 font-medium">${escapeHTML(name)}</td>
-                        <td class="py-2.5 text-right text-amber-400 font-semibold">${gem.price} s</td>
-                        <td class="py-2.5 text-right font-bold text-sky-400">${gem.qty}</td>
-                        <td class="py-2.5 text-right text-slate-300">${val} s</td>
-                    </tr>
-                `;
-            }).join('');
-            document.getElementById('stock-value').innerText = total;
-        }
-
-        function modifyGem(dir) {
-            const gem = document.getElementById('gem-select').value;
-            const qty = parseInt(document.getElementById('gem-qty').value) || 0;
-            if (data.gems[gem]) {
-                data.gems[gem].qty += (qty * dir);
-                if (data.gems[gem].qty < 0) data.gems[gem].qty = 0;
-                renderGemInventory();
-                showToast(`Stock de gemmes mis à jour.`);
-            }
-        }
-
-        // MEMBRES RP
-        function renderEmployees() {
-            const list = document.getElementById('employee-list');
-            const superAdmin = isSuperAdmin();
-
-            list.innerHTML = (data.employees || []).map(emp => `
-                <tr>
-                    <td class="py-2.5 text-slate-200 font-medium">${escapeHTML(emp.name)}</td>
-                    <td class="py-2.5 text-sky-400 font-semibold">${escapeHTML(emp.role)}</td>
-                    <td class="py-2.5 text-right text-amber-400 font-semibold">${emp.salary} s</td>
-                    <td class="py-2.5 text-right admin-only-col ${superAdmin ? '' : 'hidden'}">
-                        <button onclick="deleteEmployee(${emp.id})" class="text-xs bg-rose-900/50 hover:bg-rose-800 text-rose-300 px-2 py-1 rounded">Supprimer</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function addEmployee() {
-            const name = document.getElementById('emp-name').value.trim();
-            const role = document.getElementById('emp-role').value;
-            const salary = parseInt(document.getElementById('emp-salary').value) || 0;
-
-            if (!name) {
-                showToast("Veuillez indiquer un nom.");
-                return;
-            }
-
-            if (!data.employees) data.employees = [];
-            data.employees.push({ id: Date.now(), name, role, salary });
-
-            document.getElementById('emp-name').value = '';
-            document.getElementById('emp-salary').value = '';
-            renderEmployees();
-            showToast(`Membre RP ${name} ajouté !`);
-        }
-
-        function deleteEmployee(id) {
-            data.employees = (data.employees || []).filter(e => e.id !== id);
-            renderEmployees();
-            showToast("Membre supprimé.");
-        }
-
-        // ALCHIMIE
         function initAlchemyStock() {
             if (!data.alchemyStock) data.alchemyStock = {};
             if (!data.alchemyPrices) data.alchemyPrices = {};
@@ -642,10 +609,14 @@
             document.getElementById('alchemy-gold-balance').innerText = data.alchemyGold || 0;
         }
 
-        function modifyAlchemyGold(dir) {
+        function modifyAlchemyGold(direction) {
             const qty = parseInt(document.getElementById('alchemy-gold-qty').value) || 0;
-            data.alchemyGold = (data.alchemyGold || 0) + (qty * dir);
+            if (qty <= 0) return;
+
+            data.alchemyGold = (data.alchemyGold || 0) + (qty * direction);
             if (data.alchemyGold < 0) data.alchemyGold = 0;
+
+            saveDataToBin();
             renderAlchemyGold();
             showToast(`Caisse d'alchimie mise à jour: ${data.alchemyGold} septims.`);
         }
@@ -683,6 +654,7 @@
             const recipe = (data.alchemyRecipes || []).find(r => r.id === selectVal);
             if (!recipe) return;
 
+            // Verifier le stock
             for (const [ing, qty] of Object.entries(recipe.ingredients)) {
                 if ((data.alchemyStock[ing] || 0) < qty) {
                     showToast(`Stock insuffisant en ${ing} !`);
@@ -690,16 +662,19 @@
                 }
             }
 
+            // Consommer les ingrédients
             for (const [ing, qty] of Object.entries(recipe.ingredients)) {
                 data.alchemyStock[ing] -= qty;
             }
 
+            saveDataToBin();
             renderAlchemyUI();
-            showToast(`Potion concoctée : ${recipe.name} !`);
+            showToast(`Potion concoctée avec succès : ${recipe.name} !`);
         }
 
         function toggleRecipeEditor() {
-            document.getElementById('recipe-editor-panel').classList.toggle('hidden');
+            const panel = document.getElementById('recipe-editor-panel');
+            panel.classList.toggle('hidden');
         }
 
         function renderRecipeEditorIngredients() {
@@ -732,8 +707,14 @@
             if (ing2) ingredients[ing2] = qty2;
             if (ing3) ingredients[ing3] = qty3;
 
+            if (Object.keys(ingredients).length === 0) {
+                showToast("Veuillez choisir au moins un ingrédient.");
+                return;
+            }
+
             if (!data.alchemyRecipes) data.alchemyRecipes = [];
 
+            // Existe déjà ?
             const existingIndex = data.alchemyRecipes.findIndex(r => r.name.toLowerCase() === name.toLowerCase());
             const newRecipe = {
                 id: existingIndex >= 0 ? data.alchemyRecipes[existingIndex].id : 'rec_' + Date.now(),
@@ -748,13 +729,15 @@
                 data.alchemyRecipes.push(newRecipe);
             }
 
+            saveDataToBin();
             renderAlchemyUI();
-            showToast(`Recette "${name}" enregistrée !`);
+            showToast(`Recette "${name}" enregistrée (${price} septims) !`);
         }
 
         function deleteRecipe() {
             const selectVal = document.getElementById('potion-recipe-select').value;
             data.alchemyRecipes = (data.alchemyRecipes || []).filter(r => r.id !== selectVal);
+            saveDataToBin();
             renderAlchemyUI();
             showToast("Recette supprimée.");
         }
@@ -776,6 +759,7 @@
             if (!data.alchemyPrices) data.alchemyPrices = {};
             data.alchemyPrices[ing] = newPrice;
 
+            saveDataToBin();
             renderAlchemyUI();
             showToast(`Prix de "${ing}" mis à jour : ${newPrice} septims.`);
         }
@@ -815,6 +799,7 @@
         function adjustIngredientStock(ing, delta) {
             data.alchemyStock[ing] = (data.alchemyStock[ing] || 0) + delta;
             if (data.alchemyStock[ing] < 0) data.alchemyStock[ing] = 0;
+            saveDataToBin();
             renderAlchemyStock();
             updateRecipeDetails();
         }
@@ -843,6 +828,11 @@
         }
 
         function submitAlchemySale() {
+            if (!currentUser) {
+                showToast("Vous devez être connecté.");
+                return;
+            }
+
             const type = document.getElementById('alchemy-sale-type').value;
             const description = document.getElementById('alchemy-sale-description').value.trim();
             const amount = parseInt(document.getElementById('alchemy-sale-amount').value);
@@ -861,7 +851,7 @@
 
             const sale = {
                 id: Date.now(),
-                seller: currentUser ? currentUser.username : "Alchimiste",
+                seller: currentUser.username || currentUser.name || "Alchimiste",
                 type: type,
                 description: description,
                 price: amount,
@@ -870,6 +860,7 @@
 
             data.alchemySalesHistory.unshift(sale);
 
+            saveDataToBin();
             renderAlchemyGold();
             renderAlchemySalesHistory();
             showToast(`Vente enregistrée ! +${caisseGain} septims dans la caisse d'alchimie.`);
@@ -895,11 +886,21 @@
             `).join('');
         }
 
-        // Initialisation de la page
+        // Fake JSONBIN persistence handlers
+        function saveDataToBin() {
+            console.log("Saving data...", data);
+        }
+
+        function loginWithDiscord() {
+            currentUser = { id: '232537879207739394', username: 'AlchimisteRP' };
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            renderAlchemyUI();
+        }
+
+        // Auto init for preview
         window.onload = () => {
-            renderGoldBalance();
-            renderGemInventory();
-            renderEmployees();
+            loginWithDiscord();
         };
     </script>
 </body>
