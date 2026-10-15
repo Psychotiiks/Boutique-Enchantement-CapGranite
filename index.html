@@ -19,32 +19,16 @@
         }
     </style></head><body class="flex flex-col items-center p-4 md:p-8">
 
-    <!-- Login Overlay -->
-    <div id="login-overlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center z-50 p-4 text-center">
-        <div class="bg-slate-900/90 border border-sky-500/30 rounded-xl p-8 max-w-md w-full shadow-2xl">
-            <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-sky-900/40 to-slate-800 border-2 border-sky-400 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-sky-500/20">
-                <span class="text-4xl text-sky-400">ᛋ</span>
-            </div>
-            <h1 class="text-2xl font-bold tracking-wider mb-2 text-slate-100">Officine Lourde-Lame</h1>
-            <p class="text-slate-400 text-sm mb-6">Choisissez votre mode de connexion pour accéder aux registres :</p>
-            
-            <div class="flex flex-col gap-3">
-                <button onclick="loginAs('Grand Maître')" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-md">
-                    <span>👑 Connexion Grand Maître (Accès Total / Admin)</span>
-                </button>
-                <button onclick="loginAs('Alchimiste')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-md">
-                    <span>🧪 Connexion Alchimiste / Enchanteur</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Main App Container -->
-    <div id="app-container" class="hidden w-full max-w-5xl flex-col items-center">
+    <div id="app-container" class="w-full max-w-5xl flex flex-col items-center">
         
-        <!-- User Top Bar -->
+        <!-- User Top Bar (Connexion/Déconnexion Discord & Admin) -->
         <div class="w-full flex justify-end mb-4">
-            <div id="auth-container"></div>
+            <div id="auth-container">
+                <button onclick="loginWithDiscord()" class="bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center gap-2 shadow-md">
+                    <span>Connexion Discord</span>
+                </button>
+            </div>
         </div>
 
         <!-- Header -->
@@ -53,7 +37,7 @@
                 <span class="text-4xl text-sky-400 font-bold">ᛋ</span>
             </div>
             <h1 class="text-3xl font-extrabold tracking-widest text-slate-100 uppercase">Officine Lourde-Lame</h1>
-            <div class="mt-1"><span id="sync-status" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700">Connecté</span></div>
+            <div class="mt-1"><span id="sync-status" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700">Registre Ouvert</span></div>
         </div>
 
         <!-- Navigation Tabs -->
@@ -95,8 +79,8 @@
                 <p class="text-xs text-slate-500 text-center mt-3">Une commission de 5% est versée au vendeur, le reste alimente la caisse de l'officine.</p>
             </div>
 
-            <!-- Admin Gold Management -->
-            <div id="admin-gold-card" class="bg-slate-900/80 backdrop-blur border border-amber-500/30 rounded-xl p-6 w-full shadow-xl">
+            <!-- Admin Gold Management (Admin Only) -->
+            <div id="admin-gold-card" class="bg-slate-900/80 backdrop-blur border border-amber-500/30 rounded-xl p-6 w-full shadow-xl hidden">
                 <h2 class="text-lg font-bold text-amber-300 border-b border-slate-800 pb-3 mb-4">Gestion de la Caisse Enchanterie (Admin)</h2>
                 <div class="flex gap-3 flex-wrap items-center">
                     <input type="number" id="gold-qty" value="100" min="1" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 w-32 outline-none">
@@ -109,7 +93,7 @@
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Stock de Gemmes Spirituelles</h2>
                 
-                <div id="admin-gem-controls" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <div id="admin-gem-controls" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 hidden">
                     <select id="gem-select" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-sky-500 outline-none">
                         <option value="Gemme Spirituelle Vide">Gemme Spirituelle Vide</option>
                         <option value="Gemme Spirituelle Pleine">Gemme Spirituelle Pleine</option>
@@ -140,7 +124,7 @@
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Registre des Membres & Enchanteurs RP</h2>
                 
-                <div id="admin-employee-inputs" class="flex flex-col gap-3 mb-4">
+                <div id="admin-employee-inputs" class="flex flex-col gap-3 mb-4 hidden">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <input type="text" id="emp-name" placeholder="Nom du personnage RP" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
                         <select id="emp-role" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
@@ -170,7 +154,7 @@
                                 <th class="pb-3 font-semibold">Nom du Membre</th>
                                 <th class="pb-3 font-semibold">Rôle RP</th>
                                 <th class="pb-3 font-semibold text-right">Rémunération</th>
-                                <th class="pb-3 font-semibold text-right admin-only-col">Actions</th>
+                                <th class="pb-3 font-semibold text-right admin-only-col hidden">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="employee-list" class="divide-y divide-slate-800/50"></tbody>
@@ -287,7 +271,7 @@
                     <div id="recipe-ingredients-list" class="flex flex-wrap gap-2 text-sm pt-1"></div>
                 </div>
 
-                <!-- Modifier / Créateur de recettes -->
+                <!-- Moditeur / Créateur de recettes -->
                 <div id="recipe-editor-panel" class="hidden mt-6 pt-6 border-t border-slate-800">
                     <h3 class="text-sm font-bold text-emerald-300 mb-3">🛠️ Créer / Éditer une Recette & Son Prix en Septims</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -384,6 +368,8 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script>
+        const ADMIN_DISCORD_IDS = ['232537879207739394'];
+
         const skyrimIngredientsList = [
             "Aile de papillon", "Aile de papillon bleu", "Aile de monarque orange", "Aile de mophine lunaire", 
             "Amanite tue-mouches", "Ail", "Absinthe", "Abeille", "Blé", "Cœur de daedra", "Chaire d'horker", 
@@ -429,37 +415,64 @@
 
         let currentUser = null;
 
-        function loginAs(role) {
-            currentUser = {
-                username: role === 'Grand Maître' ? 'Grand Maître (Admin)' : 'Alchimiste RP',
-                role: role
+        function loginWithDiscord() {
+            // Simulation connexion Admin avec votre ID
+            currentUser = { 
+                id: '232537879207739394',
+                username: 'Grand Maître (Admin)', 
+                role: 'Grand Maître' 
             };
 
-            document.getElementById('login-overlay').classList.add('hidden');
-            const app = document.getElementById('app-container');
-            app.classList.remove('hidden');
-            app.classList.add('flex');
-
-            document.getElementById('auth-container').innerHTML = `
-                <div class="flex items-center gap-3 bg-slate-900/90 border border-amber-500/40 px-4 py-2 rounded-lg shadow-lg">
-                    <span class="text-xs text-amber-300 font-bold">👤 ${escapeHTML(currentUser.username)}</span>
-                    <button onclick="logout()" class="text-xs text-slate-400 hover:text-rose-400 font-medium transition">Déconnexion</button>
-                </div>
-            `;
-
-            renderGoldBalance();
-            renderGemInventory();
+            updateAuthUI();
+            updateAdminVisibility();
             renderEmployees();
-            renderAlchemyUI();
-            showToast(`Connecté en tant que ${role} !`);
+            showToast("Connecté avec succès en tant qu'Administrateur !");
         }
 
         function logout() {
             currentUser = null;
-            document.getElementById('login-overlay').classList.remove('hidden');
-            const app = document.getElementById('app-container');
-            app.classList.add('hidden');
-            app.classList.remove('flex');
+            updateAuthUI();
+            updateAdminVisibility();
+            renderEmployees();
+            showToast("Déconnecté.");
+        }
+
+        function updateAuthUI() {
+            const authContainer = document.getElementById('auth-container');
+            if (currentUser) {
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-3 bg-slate-900/90 border border-amber-500/40 px-4 py-2 rounded-lg shadow-lg">
+                        <span class="text-xs text-amber-300 font-bold">👑 ${escapeHTML(currentUser.username)}</span>
+                        <button onclick="logout()" class="text-xs text-slate-400 hover:text-rose-400 font-medium transition">Déconnexion</button>
+                    </div>
+                `;
+            } else {
+                authContainer.innerHTML = `
+                    <button onclick="loginWithDiscord()" class="bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center gap-2 shadow-md">
+                        <span>Connexion Discord</span>
+                    </button>
+                `;
+            }
+        }
+
+        function isSuperAdmin() {
+            return currentUser && (ADMIN_DISCORD_IDS.includes(currentUser.id) || currentUser.role === 'Grand Maître');
+        }
+
+        function updateAdminVisibility() {
+            const superAdmin = isSuperAdmin();
+
+            const adminGoldCard = document.getElementById('admin-gold-card');
+            const adminGemControls = document.getElementById('admin-gem-controls');
+            const adminEmployeeInputs = document.getElementById('admin-employee-inputs');
+
+            if (adminGoldCard) adminGoldCard.classList.toggle('hidden', !superAdmin);
+            if (adminGemControls) adminGemControls.classList.toggle('hidden', !superAdmin);
+            if (adminEmployeeInputs) adminEmployeeInputs.classList.toggle('hidden', !superAdmin);
+
+            document.querySelectorAll('.admin-only-col').forEach(el => {
+                el.classList.toggle('hidden', !superAdmin);
+            });
         }
 
         function showToast(message) {
@@ -562,12 +575,14 @@
         // MEMBRES RP
         function renderEmployees() {
             const list = document.getElementById('employee-list');
+            const superAdmin = isSuperAdmin();
+
             list.innerHTML = (data.employees || []).map(emp => `
                 <tr>
                     <td class="py-2.5 text-slate-200 font-medium">${escapeHTML(emp.name)}</td>
                     <td class="py-2.5 text-sky-400 font-semibold">${escapeHTML(emp.role)}</td>
                     <td class="py-2.5 text-right text-amber-400 font-semibold">${emp.salary} s</td>
-                    <td class="py-2.5 text-right admin-only-col">
+                    <td class="py-2.5 text-right admin-only-col ${superAdmin ? '' : 'hidden'}">
                         <button onclick="deleteEmployee(${emp.id})" class="text-xs bg-rose-900/50 hover:bg-rose-800 text-rose-300 px-2 py-1 rounded">Supprimer</button>
                     </td>
                 </tr>
@@ -879,6 +894,13 @@
                 </tr>
             `).join('');
         }
+
+        // Initialisation de la page
+        window.onload = () => {
+            renderGoldBalance();
+            renderGemInventory();
+            renderEmployees();
+        };
     </script>
 </body>
 </html>
