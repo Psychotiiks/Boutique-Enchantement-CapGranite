@@ -36,15 +36,13 @@
             <div class="mt-1"><span id="sync-status" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700">Connexion au serveur cloud...</span></div>
         </div>
 
-        <!-- Navigation Tabs -->
+        <!-- Navigation Tabs (Simplifiée : Enchanteur & Alchimiste) -->
         <div class="flex flex-wrap gap-2 mb-6 justify-center w-full">
-            <button class="nav-tab active px-5 py-2.5 rounded-lg font-semibold text-sm transition bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow" onclick="switchTab('shop')">📜 Enchanterie & Ventes</button>
-            <button class="nav-tab px-5 py-2.5 rounded-lg font-semibold text-sm transition bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-white" onclick="switchTab('order')">✨ Passer une Commande</button>
-            <button class="nav-tab px-5 py-2.5 rounded-lg font-semibold text-sm transition bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-white" onclick="switchTab('my-orders')">📦 Mes Commandes</button>
-            <button class="nav-tab px-5 py-2.5 rounded-lg font-semibold text-sm transition bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-white" onclick="switchTab('alchemy')">🧪 Alchimiste</button>
+            <button class="nav-tab active px-6 py-2.5 rounded-lg font-semibold text-sm transition bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow" onclick="switchTab('shop')">📜 Enchanteur</button>
+            <button class="nav-tab px-6 py-2.5 rounded-lg font-semibold text-sm transition bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-white" onclick="switchTab('alchemy')">🧪 Alchimiste</button>
         </div>
 
-        <!-- Tab Shop & Management -->
+        <!-- Tab Enchanteur -->
         <div id="tab-shop" class="tab-content active w-full flex flex-col items-center gap-6">
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
@@ -143,39 +141,6 @@
                         <tbody id="employee-list" class="divide-y divide-slate-800/50"></tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-
-        <!-- Tab Order Form -->
-        <div id="tab-order" class="tab-content hidden w-full flex flex-col items-center">
-            <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
-                <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-2">Formulaire de Commande</h2>
-                <div class="flex flex-col gap-4 max-w-lg mx-auto">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase">Type d'objet :</label>
-                        <select id="order-item-type" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 outline-none">
-                            <option value="Armure">🛡️ Armure</option>
-                            <option value="Arme">⚔️ Arme</option>
-                            <option value="Bijou">💍 Bijou</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase">Précisions :</label>
-                        <input type="text" id="order-details" placeholder="Ex: Anneau en or..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 outline-none">
-                    </div>
-                    <button class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-3 rounded-lg text-sm transition shadow-lg" onclick="showToast('Commande envoyée !')">Envoyer la Commande</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab My Orders -->
-        <div id="tab-my-orders" class="tab-content hidden w-full flex flex-col items-center">
-            <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
-                <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4">Suivi de Mes Commandes</h2>
-                <table class="w-full text-left text-sm">
-                    <thead><tr class="border-b border-slate-800 text-slate-400"><th class="pb-3">Type</th><th class="pb-3 text-right">Statut</th></tr></thead>
-                    <tbody><tr><td colspan="2" class="py-4 text-center text-slate-500 italic">Aucune commande en cours.</td></tr></tbody>
-                </table>
             </div>
         </div>
 
