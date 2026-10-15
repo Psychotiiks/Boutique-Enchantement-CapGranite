@@ -119,6 +119,11 @@
                             <option value="Alchimiste">🧪 Alchimiste</option>
                             <option value="Guerrier">⚔️ Guerrier</option>
                             <option value="Forgeron">🔨 Forgeron</option>
+                            <option value="Mineur">⛏️ Mineur</option>
+                            <option value="Cuisinier">🍳 Cuisinier</option>
+                            <option value="Chasseur">🏹 Chasseur</option>
+                            <option value="Couture">🧵 Couture</option>
+                            <option value="Menuisier">🪓 Menuisier</option>
                             <option value="Visiteur">👤 Visiteur</option>
                         </select>
                         <input type="number" id="emp-salary" placeholder="Rémunération" min="0" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none">
@@ -160,8 +165,7 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script>
-        // METTRE VOTRE URL DE DÉPLOIEMENT GOOGLE APPS SCRIPT ICI :
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHmNh6wEEMGNfylskirp6jstABo2fzeGqkHLx7bTFpdUhE4ulD7Vzp-Xpnkss4nVKl/exec';
+        const GOOGLE_SCRIPT_URL = 'VOTRE_URL_GOOGLE_APPS_SCRIPT'; // Collez votre URL ici
 
         const ADMIN_DISCORD_IDS = ['232537879207739394'];
 
@@ -173,7 +177,7 @@
                 "Gemme Spirituelle Pleine": { "qty": 248, "price": 10 }
             },
             employees: [
-                { "id": 1789195591945, "name": "Maelor Lourde-Lame", "role": "Enchanteur", "salary": 0 },
+                { "id": 1789195591945, "name": "Maelor Lourde-Lame", "role": "Alchimiste", "salary": 0 },
                 { "id": 1790384597423, "name": "Hrogar Brise-fer", "role": "Guerrier", "salary": 0 },
                 { "id": 1790384613748, "name": "Othon Pose-Pont", "role": "Client", "salary": 0 },
                 { "id": 1790457862677, "name": "Achusior Lourde-Lame", "role": "Forgeron", "salary": 0 },
@@ -349,13 +353,36 @@
             list.innerHTML = (data.employees || []).map(emp => `
                 <tr>
                     <td class="py-2.5 text-slate-200">${escapeHTML(emp.name)}</td>
-                    <td class="py-2.5 text-sky-400">${escapeHTML(emp.role)}</td>
+                    <td class="py-2.5 text-sky-400">
+                        <select onchange="updateEmployeeRole(${emp.id}, this.value)" class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-sky-300 outline-none ${adminStatus ? '' : 'pointer-events-none appearance-none'}">
+                            <option value="Enchanteur" ${emp.role === 'Enchanteur' ? 'selected' : ''}>✨ Enchanteur</option>
+                            <option value="Alchimiste" ${emp.role === 'Alchimiste' ? 'selected' : ''}>🧪 Alchimiste</option>
+                            <option value="Guerrier" ${emp.role === 'Guerrier' ? 'selected' : ''}>⚔️ Guerrier</option>
+                            <option value="Forgeron" ${emp.role === 'Forgeron' ? 'selected' : ''}>🔨 Forgeron</option>
+                            <option value="Mineur" ${emp.role === 'Mineur' ? 'selected' : ''}>⛏️ Mineur</option>
+                            <option value="Cuisinier" ${emp.role === 'Cuisinier' ? 'selected' : ''}>🍳 Cuisinier</option>
+                            <option value="Chasseur" ${emp.role === 'Chasseur' ? 'selected' : ''}>🏹 Chasseur</option>
+                            <option value="Couture" ${emp.role === 'Couture' ? 'selected' : ''}>🧵 Couture</option>
+                            <option value="Menuisier" ${emp.role === 'Menuisier' ? 'selected' : ''}>🪓 Menuisier</option>
+                            <option value="Visiteur" ${emp.role === 'Visiteur' ? 'selected' : ''}>👤 Visiteur</option>
+                        </select>
+                    </td>
                     <td class="py-2.5 text-right text-amber-400">${emp.salary || 0} s</td>
                     <td class="py-2.5 text-right admin-only-col ${adminStatus ? '' : 'hidden'}">
                         <button onclick="deleteEmployee(${emp.id})" class="text-xs bg-rose-900/50 text-rose-300 px-2 py-1 rounded">Supprimer</button>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        function updateEmployeeRole(id, newRole) {
+            if (!isAdmin()) return;
+            const emp = (data.employees || []).find(e => e.id === id);
+            if (emp) {
+                emp.role = newRole;
+                saveCloudData();
+                showToast("Rôle mis à jour !");
+            }
         }
 
         function addEmployee() {
