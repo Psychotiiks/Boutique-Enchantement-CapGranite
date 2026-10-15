@@ -300,6 +300,37 @@
             
             <!-- Crafting Station Panel -->
             <div class="bg-slate-900/80 backdrop-blur border border-emerald-500/30 rounded-xl p-6 w-full shadow-xl">
+                <div class="bg-slate-900/80 backdrop-blur border border-emerald-500/30 rounded-xl p-6 w-full shadow-xl">
+                <h2 class="text-lg font-bold text-emerald-300 border-b border-slate-800 pb-3 mb-4">Enregistrer une Vente de Potion / Poison</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                    <select id="alchemy-sale-type" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                        <option value="Potion Soin/Vigueur/Magie">🧪 Potion de Soin/Sante/Magie</option>
+                        <option value="Elixir Renforcement">✨ Elixir de Renforcement</option>
+                        <option value="Poison">☠️ Poison / Dégâts</option>
+                        <option value="Ingredient">🌿 Ingrédient Brut</option>
+                    </select>
+                    <input type="text" id="alchemy-sale-description" placeholder="Nom de la potion/ingrédient (ex: Potion de Soin Majeure)" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    <input type="number" id="alchemy-sale-amount" placeholder="Prix (septims)" min="1" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                </div>
+                <button class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow-md mb-3" onclick="submitAlchemySale()">Valider la Vente Alchimique</button>
+                <p class="text-xs text-slate-500 text-center mb-6">Une commission de 5% est versée au vendeur, le reste alimente la caisse d'alchimie/officine.</p>
+
+                <!-- Historique des ventes Alchimie -->
+                <h3 class="text-sm font-semibold text-slate-300 mb-3 border-t border-slate-800 pt-4">📜 Registre des dernières ventes alchimiques</h3>
+                <div class="overflow-x-auto max-h-60 overflow-y-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="pb-2 font-semibold">Vendeur</th>
+                                <th class="pb-2 font-semibold">Type</th>
+                                <th class="pb-2 font-semibold">Description</th>
+                                <th class="pb-2 font-semibold text-right">Prix</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alchemy-sales-history-list" class="divide-y divide-slate-800/50"></tbody>
+                    </table>
+                </div>
+            </div>
                 <h2 class="text-lg font-bold text-emerald-300 border-b border-slate-800 pb-3 mb-4 flex items-center gap-2">
                     <span>⚗️</span> Atelier de Concoction de Potions
                 </h2>
@@ -794,7 +825,79 @@
                 if (el) el.classList.toggle('hidden', !isAdmin());
             });
         }
+function submitAlchemySale() {
+            if (!currentUser) {
+                showToast("Vous devez vous connecter pour effectuer une vente.");
+                return;
+            }
 
+            const type = document.getElementById('alchemy-sale-type').value;
+            const description = document.getElementById('alchemy-sale-description').value.trim();
+            const amount = parseInt(document.getElementById('alchemy-sale-amount').value);
+
+            if (!description || isNaN(amount) || amount <= 0) {
+                showToast("Veuillez remplir correctement la description et le montant.");
+                return;
+            }
+
+            const sellerCommission = Math.round(amount * 0.05);
+            const treasuryGain = amount - sellerCommission;
+
+            // Mettre à jour l'or global
+            data.gold = (data.gold || 0) + treasuryGain;
+
+            // Enregistrer la vente dans l'historique alchimique
+            if (!data.alchemySalesHistory) {
+                data.alchemySalesHistory = [];
+            }
+
+            const saleLog = {
+                id: Date.now(),
+                seller: currentUser.username || currentUser.name || "Alchimiste Inconnu",
+                type: type,
+                description: description,
+                price: amount,
+                date: new Date().toLocaleString('fr-FR')
+            };
+
+            data.alchemySalesHistory.unshift(saleLog);
+
+            // Audit Log
+            if (data.auditLogs) {
+                data.auditLogs.unshift(`[Alchimie] ${saleLog.seller} a vendu "${description}" pour ${amount} septims (+${treasuryGain}s à la caisse).`);
+            }
+
+            // Réinitialiser les champs
+            document.getElementById('alchemy-sale-description').value = '';
+            document.getElementById('alchemy-sale-amount').value = '';
+
+            // Synchroniser et rafraîchir
+            saveDataToBin();
+            renderAlchemySalesHistory();
+            renderGoldBalance();
+            showToast(`Vente enregistrée ! +${treasuryGain} septims dans la caisse.`);
+        }
+
+        // Afficher l'historique des ventes d'alchimie
+        function renderAlchemySalesHistory() {
+            const historyList = document.getElementById('alchemy-sales-history-list');
+            if (!historyList) return;
+
+            const sales = data.alchemySalesHistory || [];
+            if (sales.length === 0) {
+                historyList.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500 italic">Aucune vente alchimique enregistrée pour le moment.</td></tr>`;
+                return;
+            }
+
+            historyList.innerHTML = sales.slice(0, 15).map(sale => `
+                <tr>
+                    <td class="py-2 text-slate-300 font-medium">${escapeHTML(sale.seller)}</td>
+                    <td class="py-2 text-slate-400">${escapeHTML(sale.type)}</td>
+                    <td class="py-2 text-slate-200">${escapeHTML(sale.description)}</td>
+                    <td class="py-2 text-right text-emerald-400 font-semibold">+${sale.price} s</td>
+                </tr>
+            `).join('');
+        }
         function renderMyOrders() {
             if (!currentUser) return;
             let myOrdersHTML = '';
