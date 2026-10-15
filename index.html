@@ -415,15 +415,20 @@
         ];
 
         let data = {
-            gold: 1500,
+            gold: 1696,
             alchemyGold: 800,
             gems: {
-                "Gemme Spirituelle Vide": { qty: 20, price: 50 },
-                "Gemme Spirituelle Pleine": { qty: 10, price: 150 }
+                "Gemme Spirituelle Vide": { "qty": 265, "price": 10 },
+                "Gemme Spirituelle Pleine": { "qty": 248, "price": 10 }
             },
             employees: [
-                { id: 1, name: "Farengar", role: "Enchanteur", salary: 150 }
+                { "id": 1789195591945, "name": "Maelor Lourde-Lame", "role": "Alchimiste", "salary": 0, "discordId": "232537879207739394" },
+                { "id": 1790384597423, "name": "Hrogar Brise-fer", "role": "Guerrier", "salary": 0, "discordId": "212332083006275584" },
+                { "id": 1790384613748, "name": "Othon Pose-Pont", "role": "Client", "salary": 0, "discordId": "604355777259372573" },
+                { "id": 1790457862677, "name": "Achusior Lourde-Lame", "role": "Forgeron", "salary": 0, "discordId": "230010273316995072" },
+                { "id": 1792082034580, "name": "Alfrim Lys-Gelé", "role": "Alchimiste", "salary": 0, "discordId": "705033518954053712" }
             ],
+            salesHistory: [],
             alchemySalesHistory: [],
             alchemyStock: {},
             alchemyPrices: {},
@@ -445,7 +450,7 @@
                 if (response.ok) {
                     const result = await response.json();
                     if (result.record && Object.keys(result.record).length > 0) {
-                        data = result.record;
+                        data = Object.assign(data, result.record);
                         if (data.ingredientsList) skyrimIngredientsList = data.ingredientsList;
                     }
                     statusEl.innerText = 'En ligne (Synchronisé)';
@@ -497,7 +502,7 @@
         function loginWithDiscord() {
             currentUser = { 
                 id: '232537879207739394',
-                username: 'Admin Officine', 
+                username: 'tr4giik', 
                 role: 'Admin' 
             };
 
@@ -661,7 +666,7 @@
                 <tr>
                     <td class="py-2.5 text-slate-200 font-medium">${escapeHTML(emp.name)}</td>
                     <td class="py-2.5 text-sky-400 font-semibold">${escapeHTML(emp.role)}</td>
-                    <td class="py-2.5 text-right text-amber-400 font-semibold">${emp.salary} s</td>
+                    <td class="py-2.5 text-right text-amber-400 font-semibold">${emp.salary || 0} s</td>
                     <td class="py-2.5 text-right admin-only-col ${adminStatus ? '' : 'hidden'}">
                         <button onclick="deleteEmployee(${emp.id})" class="text-xs bg-rose-900/50 hover:bg-rose-800 text-rose-300 px-2 py-1 rounded">Supprimer</button>
                     </td>
