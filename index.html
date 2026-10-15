@@ -48,7 +48,7 @@
             <button class="nav-tab px-5 py-2.5 rounded-lg font-semibold text-sm transition bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-white" onclick="switchTab('alchemy')">🧪 Alchimiste</button>
         </div>
 
-        <!-- Tab Shop & Management -->
+        <!-- Tab Shop & Management (Enchanterie, Ventes, Gemmes, Membres RP) -->
         <div id="tab-shop" class="tab-content active w-full flex flex-col items-center gap-6">
             
             <!-- Balances -->
@@ -328,11 +328,23 @@
                 </div>
             </div>
 
-            <!-- Alchemy Ingredients Stock Table -->
+            <!-- Alchemy Ingredients Stock Table & Ingredient Management -->
             <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-6 w-full shadow-xl">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-3 mb-4 gap-3">
                     <h2 class="text-lg font-bold text-slate-200">🌿 Registre & Stock des Composants d'Alchimie</h2>
-                    <input type="text" id="alchemy-search" oninput="renderAlchemyStock()" placeholder="🔍 Rechercher un ingrédient..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-emerald-500 w-full sm:w-64">
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <input type="text" id="alchemy-search" oninput="renderAlchemyStock()" placeholder="🔍 Rechercher..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-emerald-500 w-full sm:w-48">
+                        <button class="text-xs bg-emerald-950 hover:bg-emerald-900 text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-600/40 whitespace-nowrap" onclick="toggleAddIngredientPanel()">🌿 Ajouter composant</button>
+                    </div>
+                </div>
+
+                <!-- Panneau Ajout de Composant -->
+                <div id="add-ingredient-panel" class="hidden mb-4 p-4 bg-slate-950/80 rounded-lg border border-emerald-500/30 flex flex-wrap gap-3 items-center">
+                    <span class="text-xs text-emerald-300 font-semibold uppercase">Ajouter un nouveau composant :</span>
+                    <input type="text" id="new-ing-name" placeholder="Nom (ex: Fleur de Lys)" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none flex-1 min-w-40">
+                    <input type="number" id="new-ing-price" placeholder="Prix (s)" min="0" value="15" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-24 outline-none">
+                    <input type="number" id="new-ing-qty" placeholder="Stock initial" min="0" value="5" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-24 outline-none">
+                    <button class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-1.5 rounded-lg text-xs transition" onclick="addNewIngredient()">Confirmer l'ajout</button>
                 </div>
 
                 <!-- Editeur de prix d'ingrédients -->
@@ -351,7 +363,7 @@
                                 <th class="pb-3 font-semibold text-right">Prix Unitaire</th>
                                 <th class="pb-3 font-semibold text-center">Quantité en Stock</th>
                                 <th class="pb-3 font-semibold text-right">Valeur Totale</th>
-                                <th class="pb-3 font-semibold text-right">Ajuster le Stock</th>
+                                <th class="pb-3 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="alchemy-stock-list" class="divide-y divide-slate-800/50"></tbody>
@@ -367,9 +379,12 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
     <script>
-        const ADMIN_DISCORD_ID = '232537879207739394';
+        // Liste des ID Discord autorisés comme Administrateurs (ajoutez-en d'autres au besoin)
+        const ADMIN_DISCORD_IDS = [
+            '232537879207739394'
+        ];
 
-        const skyrimIngredientsList = [
+        let skyrimIngredientsList = [
             "Aile de papillon", "Aile de papillon bleu", "Aile de monarque orange", "Aile de mophine lunaire", 
             "Amanite tue-mouches", "Ail", "Absinthe", "Abeille", "Blé", "Cœur de daedra", "Chaire d'horker", 
             "Clochette de la mort", "Champignon luisant", "Chardons", "Chapeau blanc", "Cendre de volcan", 
@@ -416,7 +431,7 @@
 
         function loginWithDiscord() {
             currentUser = { 
-                id: ADMIN_DISCORD_ID,
+                id: '232537879207739394',
                 username: 'Admin Officine', 
                 role: 'Admin' 
             };
@@ -437,7 +452,7 @@
 
         function updateAuthUI() {
             const authContainer = document.getElementById('auth-container');
-            if (currentUser && currentUser.id === ADMIN_DISCORD_ID) {
+            if (currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id)) {
                 authContainer.innerHTML = `
                     <div class="flex items-center gap-3 bg-slate-900/90 border border-amber-500/40 px-4 py-2 rounded-lg shadow-lg">
                         <span class="text-xs text-amber-300 font-bold">🛡️ Connecté (Admin)</span>
@@ -454,7 +469,7 @@
         }
 
         function isAdmin() {
-            return currentUser && currentUser.id === ADMIN_DISCORD_ID;
+            return currentUser && ADMIN_DISCORD_IDS.includes(currentUser.id);
         }
 
         function updateAdminVisibility() {
@@ -761,6 +776,44 @@
             showToast("Recette supprimée.");
         }
 
+        // GESTION ET EDITION DES COMPOSANTS
+        function toggleAddIngredientPanel() {
+            document.getElementById('add-ingredient-panel').classList.toggle('hidden');
+        }
+
+        function addNewIngredient() {
+            const name = document.getElementById('new-ing-name').value.trim();
+            const price = parseInt(document.getElementById('new-ing-price').value) || 0;
+            const qty = parseInt(document.getElementById('new-ing-qty').value) || 0;
+
+            if (!name) {
+                showToast("Veuillez entrer un nom d'ingrédient.");
+                return;
+            }
+
+            if (!skyrimIngredientsList.includes(name)) {
+                skyrimIngredientsList.push(name);
+                skyrimIngredientsList.sort((a, b) => a.localeCompare(b, 'fr'));
+            }
+
+            data.alchemyStock[name] = qty;
+            data.alchemyPrices[name] = price;
+
+            document.getElementById('new-ing-name').value = '';
+            toggleAddIngredientPanel();
+            renderAlchemyUI();
+            showToast(`Composant "${name}" ajouté à la liste !`);
+        }
+
+        function removeIngredient(ing) {
+            skyrimIngredientsList = skyrimIngredientsList.filter(item => item !== ing);
+            delete data.alchemyStock[ing];
+            delete data.alchemyPrices[ing];
+
+            renderAlchemyUI();
+            showToast(`Composant "${ing}" retiré de la liste.`);
+        }
+
         function renderIngredientPriceSelect() {
             const select = document.getElementById('ingredient-price-select');
             select.innerHTML = skyrimIngredientsList.map(ing => `<option value="${ing}">${ing} (${data.alchemyPrices[ing] || 15}s)</option>`).join('');
@@ -802,9 +855,10 @@
                         <td class="py-2.5 text-center font-bold text-emerald-400">${qty}</td>
                         <td class="py-2.5 text-right text-slate-300">${value} s</td>
                         <td class="py-2.5 text-right">
-                            <div class="inline-flex gap-1">
-                                <button onclick="adjustIngredientStock('${escapeHTML(ing)}', 1)" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold px-2.5 py-1 rounded border border-slate-700 text-xs">+1</button>
-                                <button onclick="adjustIngredientStock('${escapeHTML(ing)}', -1)" class="bg-slate-800 hover:bg-slate-700 text-rose-400 font-bold px-2.5 py-1 rounded border border-slate-700 text-xs">-1</button>
+                            <div class="inline-flex items-center gap-1">
+                                <button onclick="adjustIngredientStock('${escapeHTML(ing)}', 1)" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold px-2 py-1 rounded border border-slate-700 text-xs">+1</button>
+                                <button onclick="adjustIngredientStock('${escapeHTML(ing)}', -1)" class="bg-slate-800 hover:bg-slate-700 text-rose-400 font-bold px-2 py-1 rounded border border-slate-700 text-xs">-1</button>
+                                <button onclick="removeIngredient('${escapeHTML(ing)}')" class="bg-rose-950 hover:bg-rose-900 text-rose-300 px-2 py-1 rounded border border-rose-800/50 text-xs ml-1" title="Retirer ce composant">🗑️</button>
                             </div>
                         </td>
                     </tr>
