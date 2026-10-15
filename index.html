@@ -763,6 +763,42 @@
             renderAlchemyUI();
             showToast(`Prix de "${ing}" mis à jour : ${newPrice} septims.`);
         }
+        // Liste des IDs Discord ayant un accès Administrateur Supérieur / Grand Maître
+        const ADMIN_DISCORD_IDS = ['232537879207739394'];
+
+        // Vérification universelle des permissions
+        function isSuperAdmin() {
+            return currentUser && (ADMIN_DISCORD_IDS.includes(currentUser.id) || currentUser.role === 'Grand Maître');
+        }
+
+        function isAdmin() {
+            return isSuperAdmin() || (currentUser && currentUser.role === 'Enchanteur');
+        }
+
+        function isAlchemist() {
+            return isSuperAdmin() || (currentUser && currentUser.role === 'Alchimiste');
+        }
+
+        // Fonction d'affichage / rafraîchissement des panneaux d'administration
+        function updateAdminVisibility() {
+            const superAdmin = isSuperAdmin();
+
+            // Panel Administrateur (Gestion Or, Gemmes, Audit & Commandes)
+            const adminGoldCard = document.getElementById('admin-gold-card');
+            const adminGemControls = document.getElementById('admin-gem-controls');
+            const adminUsersCard = document.getElementById('admin-users-card');
+            const adminEmployeeInputs = document.getElementById('admin-employee-inputs');
+
+            if (adminGoldCard) adminGoldCard.classList.toggle('hidden', !superAdmin);
+            if (adminGemControls) adminGemControls.classList.toggle('hidden', !superAdmin);
+            if (adminUsersCard) adminUsersCard.classList.toggle('hidden', !superAdmin);
+            if (adminEmployeeInputs) adminEmployeeInputs.classList.toggle('hidden', !superAdmin);
+
+            // Affichage des colonnes d'actions réservées aux Admins/Grand Maître dans le registre des membres
+            document.querySelectorAll('.admin-only-col').forEach(el => {
+                el.classList.toggle('hidden', !superAdmin);
+            });
+        }
 
         function renderAlchemyStock() {
             const search = (document.getElementById('alchemy-search').value || '').toLowerCase();
