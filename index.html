@@ -36,7 +36,7 @@
             <div class="mt-1"><span id="sync-status" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700">Connexion au serveur cloud...</span></div>
         </div>
 
-        <!-- Navigation Tabs (Simplifiée : Enchanteur & Alchimiste) -->
+        <!-- Navigation Tabs -->
         <div class="flex flex-wrap gap-2 mb-6 justify-center w-full">
             <button class="nav-tab active px-6 py-2.5 rounded-lg font-semibold text-sm transition bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow" onclick="switchTab('shop')">📜 Enchanteur</button>
             <button class="nav-tab px-6 py-2.5 rounded-lg font-semibold text-sm transition bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-white" onclick="switchTab('alchemy')">🧪 Alchimiste</button>
@@ -337,17 +337,21 @@
                 statusEl.innerText = 'Chargement en temps réel...';
                 const response = await fetch(GOOGLE_SCRIPT_URL);
                 if (response.ok) {
-                    const result = await response.json();
-                    if (result && Object.keys(result).length > 0) {
-                        data = Object.assign(data, result);
+                    const textData = await response.text();
+                    if (textData && textData.trim() !== "" && textData !== "{}") {
+                        const parsed = JSON.parse(textData);
+                        // Fusion intelligente pour ne pas écraser par du vide si le cloud est vide
+                        if (parsed && Object.keys(parsed).length > 0) {
+                            data = Object.assign(data, parsed);
+                        }
                     }
                     statusEl.innerText = 'En ligne (Temps Réel)';
                     statusEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-600/50 text-emerald-300';
                 }
             } catch (err) {
-                console.error(err);
-                statusEl.innerText = 'Erreur de synchro';
-                statusEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-rose-950/80 border border-rose-600/50 text-rose-300';
+                console.warn("Erreur de chargement cloud, conservation des données locales.", err);
+                statusEl.innerText = 'Mode Local (Erreur Cloud)';
+                statusEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-amber-950/80 border border-amber-600/50 text-amber-300';
             }
             initAlchemyDefaults();
             renderAllUI();
